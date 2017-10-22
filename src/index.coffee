@@ -276,6 +276,11 @@ class @Bin_op
   # new ?
   # delete ?
 
+@un_op_ret_type_hash_list =
+  MINUS : [
+    ['int', 'int']
+    ['float', 'float']
+  ]
 class @Un_op
   a   : null
   op  : null
@@ -285,7 +290,19 @@ class @Un_op
       throw new Error "Un_op validation error. a missing"
     @a.validate(ctx)
     
-    # TODO op in list of translateable un_op
+    if !module.allowed_un_op_hash[@op]
+      throw new Error "Un_op validation error. Invalid op '#{@op}'"
+    
+    list = module.un_op_ret_type_hash_list[@op]
+    found = false
+    for v in list
+      continue if v[0] != @a.type.toString()
+      found = true
+      if v[1] != @type.toString()
+        throw new Error "Un_op validation error. un_op=#{@op} with type #{@a.type} should produce type #{v[1]} but #{@type} found"
+      break
+    if !found
+      throw new Error "Un_op validation error. Can't apply un_op=#{@op} to #{@a.type}"
     
     type_validate @type
     return

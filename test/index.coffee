@@ -76,6 +76,17 @@ describe 'index section', ()->
     it 'array<int>', ()->
       assert.throws ()-> c('any', 'array<int>').validate()
   
+  int = new mod.Const
+  int.val  = '1'
+  int.type = type 'int'
+  
+  float = new mod.Const
+  float.val  = '1'
+  float.type = type 'float'
+  
+  string = new mod.Const
+  string.val  = '1'
+  string.type = type 'string'
   describe 'Array_init', ()->
     c = (val, _type)->
       t = new mod.Const
@@ -199,18 +210,6 @@ describe 'index section', ()->
         assert.throws ()-> scope.validate()
   
   describe 'Bin_op', ()->
-    int = new mod.Const
-    int.val  = '1'
-    int.type = type 'int'
-    
-    float = new mod.Const
-    float.val  = '1'
-    float.type = type 'float'
-    
-    string = new mod.Const
-    string.val  = '1'
-    string.type = type 'string'
-    
     bo = (a, b, op, _type)->
       t = new mod.Bin_op
       t.a  = a
@@ -249,4 +248,30 @@ describe 'index section', ()->
       
       it 'string+int', ()->
         assert.throws ()-> bo(string, int, 'ADD', type 'string').validate()
+  describe 'Bin_op', ()->
+    uo = (a, op, _type)->
+      t = new mod.Un_op
+      t.a  = a
+      t.op = op
+      t.type = type _type
+      t
+    
+    it '-1', ()->
+      uo(int, 'MINUS', type 'int').validate()
+    
+    it '-1.0', ()->
+      uo(float, 'MINUS', type 'float').validate()
+    
+    describe 'throws', ()->
+      it 'missing a', ()->
+        assert.throws ()-> uo(null, 'MINUS', type 'int').validate()
+      
+      it 'invalid op', ()->
+        assert.throws ()-> uo(int, 'WTF', type 'int').validate()
+      
+      it '-int != float', ()->
+        assert.throws ()-> uo(int, 'MINUS', type 'float').validate()
+      
+      it '-string', ()->
+        assert.throws ()-> uo(string, 'MINUS', type 'int').validate()
   
