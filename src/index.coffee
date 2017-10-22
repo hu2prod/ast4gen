@@ -48,6 +48,12 @@ class @Validation_context
     ret = new module.Validation_context
     ret.parent = @
     ret
+  
+  check_id : (id)->
+    return found if found = @var_hash[id]
+    if @parent
+      return @parent.check_id id
+    throw new Error "check_id fail. Id '#{id}' not defined"
 
 # ###################################################################################################
 #    expr
@@ -146,9 +152,13 @@ class @Var
   name : ''
   type : null
   validate : (ctx = new module.Validation_context)->
-    if /^[_a-z][_a-z0-9]*$/i.test @name
+    if !/^[_a-z][_a-z0-9]*$/i.test @name
       throw new Error "Var validation error. invalid identifier"
     type_validate @type
+    
+    type = ctx.check_id(@name).type
+    if !@type.cmp type
+      throw new Error "Var type !+ Var_decl type '#{@type}' != #{type}"
     return
 
 @allowed_bin_op_hash =
@@ -402,6 +412,7 @@ class @Var_decl
   type : null
   validate : (ctx = new module.Validation_context)->
     type_validate @type
+    ctx.var_hash[@name] = @
 
 class @Class_decl
 

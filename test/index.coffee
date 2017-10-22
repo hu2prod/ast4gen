@@ -158,5 +158,43 @@ describe 'index section', ()->
       it 'string in struct{a:int}', ()->
         assert.throws ()-> s(type('struct{a:int}'),{a:c('1', type('string'))}).validate()
   
-  # describe 'Var', ()->
+  describe 'Var', ()->
+    it 'ok', ()->
+      scope = new mod.Scope
+      scope.stmt_list.push t = new mod.Var_decl
+      t.name = 'a'
+      t.type = type 'int'
+      
+      console.log "тут другая проблема, нельзя оставлять висячую переменную"
+      scope.stmt_list.push t = new mod.Var
+      t.name = 'a'
+      t.type = type 'int'
+      
+      scope.validate()
+      
+    describe 'throws', ()->
+      it 'not declared', ()->
+        t = new mod.Var
+        t.name = 'a'
+        t.type = type 'int'
+        assert.throws ()-> t.validate()
+      
+      it 'invalid id', ()->
+        t = new mod.Var
+        t.name = '1'
+        t.type = type 'int'
+        assert.throws ()-> t.validate()
+      
+      it 'not as declared type', ()->
+        scope = new mod.Scope
+        scope.stmt_list.push t = new mod.Var_decl
+        t.name = 'a'
+        t.type = type 'int'
+        
+        console.log "тут другая проблема, нельзя оставлять висячую переменную"
+        scope.stmt_list.push t = new mod.Var
+        t.name = 'a'
+        t.type = type 'string'
+        
+        assert.throws ()-> scope.validate()
   
