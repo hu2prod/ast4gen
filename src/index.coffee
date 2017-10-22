@@ -98,7 +98,7 @@ class @Array_init
   validate : (ctx = new module.Validation_context)->
     type_validate @type
     if @type.main != 'array'
-      throw new Error "Array_init validation error. type must be array but '#{@type}' occured"
+      throw new Error "Array_init validation error. type must be array but '#{@type}' found"
     
     cmp_type = @type.nest_list[0]
     
@@ -118,7 +118,7 @@ class @Hash_init
   validate : (ctx = new module.Validation_context)->
     type_validate @type
     if @type.main != 'hash'
-      throw new Error "Hash_init validation error. type must be hash but '#{@type}' occured"
+      throw new Error "Hash_init validation error. type must be hash but '#{@type}' found"
     
     for k,v of @hash
       v.validate(ctx)
@@ -139,7 +139,7 @@ class @Struct_init
   validate : (ctx = new module.Validation_context)->
     type_validate @type
     if @type.main != 'struct'
-      throw new Error "Struct_init validation error. type must be struct but '#{@type}' occured"
+      throw new Error "Struct_init validation error. type must be struct but '#{@type}' found"
       
     for k,v of @hash
       v.validate(ctx)
@@ -224,6 +224,15 @@ class @Var
   ASS_BOOL_OR  : true
   ASS_BOOL_XOR : true
 
+@bin_op_ret_type_hash_list =
+  ADD : [
+    ['int', 'int', 'int']
+    ['int', 'float', 'float']
+    ['float', 'int', 'float']
+    ['float', 'float', 'float']
+    ['string', 'string', 'string']
+  ]
+    
 class @Bin_op
   a : null
   b : null
@@ -237,7 +246,20 @@ class @Bin_op
       throw new Error "Bin_op validation error. b missing"
     @b.validate(ctx)
     
-    # TODO op in list of translateable bin_op
+    if !module.allowed_bin_op_hash[@op]
+      throw new Error "Bin_op validation error. Invalid op '#{@op}'"
+    
+    list = module.bin_op_ret_type_hash_list[@op]
+    found = false
+    for v in list
+      continue if v[0] != @a.type.toString()
+      continue if v[1] != @b.type.toString()
+      found = true
+      if v[2] != @type.toString()
+        throw new Error "Bin_op validation error. bin_op=#{@op} with types #{@a.type} #{@b.type} should produce type #{v[2]} but #{@type} found"
+      break
+    if !found
+      throw new Error "Bin_op validation error. Can't apply bin_op=#{@op} to #{@a.type} #{@b.type}"
     
     type_validate @type
     return

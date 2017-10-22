@@ -198,3 +198,55 @@ describe 'index section', ()->
         
         assert.throws ()-> scope.validate()
   
+  describe 'Bin_op', ()->
+    int = new mod.Const
+    int.val  = '1'
+    int.type = type 'int'
+    
+    float = new mod.Const
+    float.val  = '1'
+    float.type = type 'float'
+    
+    string = new mod.Const
+    string.val  = '1'
+    string.type = type 'string'
+    
+    bo = (a, b, op, _type)->
+      t = new mod.Bin_op
+      t.a  = a
+      t.b  = b
+      t.op = op
+      t.type = type _type
+      t
+    
+    it '1+1', ()->
+      bo(int, int, 'ADD', type 'int').validate()
+    
+    it '1+1.0', ()->
+      bo(int, float, 'ADD', type 'float').validate()
+    
+    it '1.0+1', ()->
+      bo(float, int, 'ADD', type 'float').validate()
+    
+    it '1.0+1.0', ()->
+      bo(float, float, 'ADD', type 'float').validate()
+    
+    it '"1"+"1"', ()->
+      bo(string, string, 'ADD', type 'string').validate()
+    
+    describe 'throws', ()->
+      it 'missing a', ()->
+        assert.throws ()-> bo(null, int, 'ADD', type 'int').validate()
+      
+      it 'missing b', ()->
+        assert.throws ()-> bo(int, null, 'ADD', type 'int').validate()
+      
+      it 'invalid op', ()->
+        assert.throws ()-> bo(int, int, 'WTF', type 'int').validate()
+      
+      it 'int+int != float', ()->
+        assert.throws ()-> bo(int, int, 'ADD', type 'float').validate()
+      
+      it 'string+int', ()->
+        assert.throws ()-> bo(string, int, 'ADD', type 'string').validate()
+  
