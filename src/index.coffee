@@ -5,7 +5,7 @@ type_validate = (t)->
   if !t
     throw new Error "Type validation error. type is missing"
   switch t.main
-    when 'int', 'float', 'string'
+    when 'void', 'int', 'float', 'string'
       if t.nest_list.length != 0
         throw new Error "Type validation error. #{t.main} can't have nest_list"
       if 0 != h_count t.field_hash
@@ -19,16 +19,23 @@ type_validate = (t)->
       if t.nest_list.length != 1
         throw new Error "Type validation error. #{t.main} must have nest_list 1"
       if 0 != h_count t.field_hash
-        throw new Error "Type validation error. #{t.main} must have no field_hash"
+        throw new Error "Type validation error. #{t.main} can't have field_hash"
     when 'struct'
       if t.nest_list.length != 0
         throw new Error "Type validation error. #{t.main} must have nest_list 0"
       if 0 == h_count t.field_hash
         throw new Error "Type validation error. #{t.main} must have field_hash"
+    when 'function'
+      if t.nest_list.length == 0
+        throw new Error "Type validation error. #{t.main} must have at least nest_list 1 (ret type)"
+      if 0 != h_count t.field_hash
+        throw new Error "Type validation error. #{t.main} can't have field_hash"
+      ''
       # TODO defined types ...
     else
       throw new Error "unknown type '#{t}'"
-  for v in t.nest_list
+  for v,k in t.nest_list
+    # continue if k == 0 and t.main == 'function' and v.main == 'void' # it's ok
     type_validate v
   
   for k,v of t.field_hash
@@ -153,7 +160,7 @@ class @Var
   type : null
   validate : (ctx = new module.Validation_context)->
     if !/^[_a-z][_a-z0-9]*$/i.test @name
-      throw new Error "Var validation error. invalid identifier"
+      throw new Error "Var validation error. invalid identifier '#{@name}'"
     type_validate @type
     
     type = ctx.check_id(@name).type
@@ -319,10 +326,18 @@ class @Fn_call
     if !@fn
       throw new Error "Fn_call validation error. fn missing"
     @fn.validate(ctx)
-    for arg in @arg_list
-      arg.validate(ctx)
     
     type_validate @type
+    if !@type.cmp @fn.type.nest_list[0]
+      throw new Error "Fn_call validation error. Return type and function decl return type doesn't match #{@fn.type.nest_list[0]} != #{@type}"
+    
+    if @fn.type.nest_list.length-1 != @arg_list.length
+      throw new Error "Fn_call validation error. Expected arg count=#{@fn.type.nest_list.length-1} found=#{@arg_list.length}"
+    
+    for arg,k in @arg_list
+      arg.validate(ctx)
+      if !@fn.type.nest_list[k+1].cmp arg.type
+        throw new Error "Fn_call validation error. arg[#{k}] type mismatch. Expected=#{@fn.type.nest_list[k+1]} found=#{arg.type}"
     return
 
 # ###################################################################################################

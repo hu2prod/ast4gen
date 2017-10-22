@@ -248,6 +248,7 @@ describe 'index section', ()->
       
       it 'string+int', ()->
         assert.throws ()-> bo(string, int, 'ADD', type 'string').validate()
+  
   describe 'Bin_op', ()->
     uo = (a, op, _type)->
       t = new mod.Un_op
@@ -274,4 +275,80 @@ describe 'index section', ()->
       
       it '-string', ()->
         assert.throws ()-> uo(string, 'MINUS', type 'int').validate()
+  
+  describe 'Fn_call', ()->
+    c = (val, _type)->
+      t = new mod.Const
+      t.val  = val
+      t.type = type _type
+      t
+    fnc = (fn, list, _type, splat=false)->
+      t = new mod.Fn_call
+      t.fn = fn
+      t.arg_list  = list
+      t.splat_fin = splat
+      t.type = type _type
+      t
+    
+    fn = (scope, _type)->
+      scope.stmt_list.push t = new mod.Var_decl
+      t.name = 'a'
+      t.type = type _type
+      
+      t = new mod.Var
+      t.name = 'a'
+      t.type = type _type
+      t
+    
+    it 'function<void>', ()->
+      scope = new mod.Scope
+      scope.stmt_list.push fnc(fn(scope, 'function<void>'), [], type 'void')
+      scope.validate()
+    
+    it 'function<void,int>', ()->
+      scope = new mod.Scope
+      scope.stmt_list.push fnc(fn(scope, 'function<void,int>'), [c('1','int')], type 'void')
+      scope.validate()
+    
+    describe 'throws', ()->
+      it 'missing', ()->
+        scope = new mod.Scope
+        scope.stmt_list.push fnc(null, [], type 'void')
+        assert.throws ()-> scope.validate()
+      
+      it 'WTF', ()->
+        scope = new mod.Scope
+        scope.stmt_list.push fnc(c('1', 'wtf'), [], type 'void')
+        assert.throws ()-> scope.validate()
+      
+      it 'mismatch1', ()->
+        scope = new mod.Scope
+        scope.stmt_list.push fnc(fn(scope, 'function<void>'), [], type 'int')
+        assert.throws ()-> scope.validate()
+      
+      it 'mismatch2', ()->
+        scope = new mod.Scope
+        scope.stmt_list.push fnc(fn(scope, 'function<int>'), [], type 'void')
+        assert.throws ()-> scope.validate()
+      
+      it 'mismatch3', ()->
+        scope = new mod.Scope
+        scope.stmt_list.push fnc(fn(scope, 'function<int>'), [], type 'float')
+        assert.throws ()-> scope.validate()
+      
+      it 'function<void,int> no int', ()->
+        scope = new mod.Scope
+        scope.stmt_list.push fnc(fn(scope, 'function<void,int>'), [], type 'void')
+        assert.throws ()-> scope.validate()
+      
+      it 'function<void> extra arg', ()->
+        scope = new mod.Scope
+        scope.stmt_list.push fnc(fn(scope, 'function<void>'), [c('1','int')], type 'void')
+        assert.throws ()-> scope.validate()
+      
+      it 'function<void,float> with arg int', ()->
+        scope = new mod.Scope
+        scope.stmt_list.push fnc(fn(scope, 'function<void,float>'), [c('1','int')], type 'void')
+        assert.throws ()-> scope.validate()
+      
   
