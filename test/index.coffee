@@ -3,6 +3,11 @@ assert = require 'assert'
 mod = require '../src/index.coffee'
 Type = require 'type'
 type = (t)->new Type t
+c = (val, _type)->
+  t = new mod.Const
+  t.val  = val
+  t.type = type _type
+  t
 
 describe 'index section', ()->
   describe 'constructor', ()->
@@ -20,7 +25,7 @@ describe 'index section', ()->
         t.validate()
         return
       
-      for v in "int float string array<int> hash<int> struct{a:int}".split /\s+/g
+      for v in "int float string bool array<int> hash<int> struct{a:int}".split /\s+/g
         do (v)->
           it v, ()-> test v
     
@@ -44,11 +49,13 @@ describe 'index section', ()->
             it v, ()-> test v
   
   describe 'Const', ()->
-    c = (val, _type)->
-      t = new mod.Const
-      t.val  = val
-      t.type = type _type
-      t
+    describe 'bool', ()->
+      it 'true', ()->
+        c('true', 'string').validate()
+      it 'false', ()->
+        c('true', 'string').validate()
+      it 'wtf', ()->
+        assert.throws ()-> c('wtf', 'bool').validate()
     
     describe 'string', ()->
       it 'ok', ()->
@@ -88,11 +95,6 @@ describe 'index section', ()->
   string.val  = '1'
   string.type = type 'string'
   describe 'Array_init', ()->
-    c = (val, _type)->
-      t = new mod.Const
-      t.val  = val
-      t.type = type _type
-      t
     a = (type, list)->
       t = new mod.Array_init
       t.type  = type
@@ -115,11 +117,6 @@ describe 'index section', ()->
         assert.throws ()-> a(type('array<int>'),[c('1', type('string'))]).validate()
   
   describe 'Hash_init', ()->
-    c = (val, _type)->
-      t = new mod.Const
-      t.val  = val
-      t.type = type _type
-      t
     h = (type, hash)->
       t = new mod.Hash_init
       t.type  = type
@@ -142,11 +139,6 @@ describe 'index section', ()->
         assert.throws ()-> h(type('hash<int>'),{a:c('1', type('string'))}).validate()
   
   describe 'Struct_init', ()->
-    c = (val, _type)->
-      t = new mod.Const
-      t.val  = val
-      t.type = type _type
-      t
     s = (type, hash)->
       t = new mod.Struct_init
       t.type  = type
@@ -277,11 +269,6 @@ describe 'index section', ()->
         assert.throws ()-> uo(string, 'MINUS', type 'int').validate()
   
   describe 'Fn_call', ()->
-    c = (val, _type)->
-      t = new mod.Const
-      t.val  = val
-      t.type = type _type
-      t
     fnc = (fn, list, _type, splat=false)->
       t = new mod.Fn_call
       t.fn = fn
@@ -350,5 +337,36 @@ describe 'index section', ()->
         scope = new mod.Scope
         scope.stmt_list.push fnc(fn(scope, 'function<void,float>'), [c('1','int')], type 'void')
         assert.throws ()-> scope.validate()
+  
+  describe 'If', ()->
+    ifc = (cond, list_t, list_f)->
+      t = new mod.If
+      t.cond = cond
+      t.t.stmt_list = list_t
+      t.f.stmt_list = list_f
+      t
+    
+    it 'empty', ()->
+      ifc(c('true', 'bool'), [], []).validate()
+    
+    it 'empty with int cond', ()->
+      ifc(c('1', 'int'), [], []).validate()
+    
+    it 'with some body', ()->
+      ifc(c('true', 'bool'), [
+        (()->
+          t = new mod.Var_decl
+          t.name = 'a'
+          t.type = type 'int'
+          t
+        )()
+      ], []).validate()
+    
+    describe 'throws', ()->
+      it 'no cond', ()->
+        assert.throws ()-> ifc(null, [], []).validate()
+      
+      it 'string cond', ()->
+        assert.throws ()-> ifc(c('true', 'string'), [], []).validate()
       
   

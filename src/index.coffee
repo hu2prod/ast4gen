@@ -5,7 +5,7 @@ type_validate = (t)->
   if !t
     throw new Error "Type validation error. type is missing"
   switch t.main
-    when 'void', 'int', 'float', 'string'
+    when 'void', 'int', 'float', 'string', 'bool'
       if t.nest_list.length != 0
         throw new Error "Type validation error. #{t.main} can't have nest_list"
       if 0 != h_count t.field_hash
@@ -80,6 +80,9 @@ class @Const
   validate : (ctx = new module.Validation_context)->
     type_validate @type
     switch @type.main
+      when 'bool'
+        unless @val in ['true', 'false']
+          throw new Error "Const validation error. '#{@val}' can't be bool"
       when 'int'
         if parseInt(@val).toString() != @val
           throw new Error "Const validation error. '#{@val}' can't be int"
@@ -368,9 +371,16 @@ class @If
     if !@cond
       throw new Error "If validation error. cond missing"
     
+    unless @cond.type.main in ['bool', 'int']
+      throw new Error "If validation error. cond must be bool or int"
+    
     @cond.validate(ctx)
     @t.validate(ctx)
     @f.validate(ctx)
+    
+    if @t.stmt_list.length == 0
+      perr "Warning. If empty true body"
+    
     return
 
 # есть следующие валидные случаи компилирования switch
