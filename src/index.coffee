@@ -18,6 +18,8 @@ type_validate = (t)->
     when 'hash'
       if t.nest_list.length != 1
         throw new Error "Type validation error. #{t.main} must have nest_list 1"
+      if 0 != h_count t.field_hash
+        throw new Error "Type validation error. #{t.main} must have no field_hash"
     when 'struct'
       if t.nest_list.length != 0
         throw new Error "Type validation error. #{t.main} must have nest_list 0"
@@ -111,14 +113,10 @@ class @Hash_init
     type_validate @type
     if @type.main != 'hash'
       throw new Error "Hash_init validation error. type must be hash but '#{@type}' occured"
-      
+    
     for k,v of @hash
       v.validate(ctx)
     
-    if 0 != h_count hash.field_hash
-      throw new Error "Hash_init validation error. field_hash must be empty in non struct"
-    if hash.nest_list.length != 1
-      throw new Error "Hash_init validation error. nest_list must be 1 in non struct"
     cmp_type = @type.nest_list[0]
     for k,v of @hash
       if !v.type.cmp cmp_type
@@ -134,17 +132,14 @@ class @Struct_init
   
   validate : (ctx = new module.Validation_context)->
     type_validate @type
-    if @type.main != 'hash'
-      throw new Error "Struct_init validation error. type must be hash but '#{@type}' occured"
+    if @type.main != 'struct'
+      throw new Error "Struct_init validation error. type must be struct but '#{@type}' occured"
       
     for k,v of @hash
       v.validate(ctx)
+      if !v.type.cmp cmp_type = @type.field_hash[k]
+        throw new Error "Struct_init validation error. key '#{k}' must be type '#{cmp_type}' but '#{v.type}' found"
     
-    if 0 == h_count hash.field_hash
-      throw new Error "Struct_init validation error. field_hash must be not empty in struct"
-    if hash.nest_list.length != 0
-      throw new Error "Struct_init validation error. nest_list must be empty in struct"
-  
     return
 
 class @Var
