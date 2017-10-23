@@ -45,15 +45,17 @@ type_validate = (t)->
 
 class @Validation_context
   parent : null
+  breakable : false
   type_hash : {}
   var_hash  : {}
   constructor:()->
     @type_hash = {}
     @var_hash  = {}
   
-  mk_nest : ()->
+  mk_nest : (pass_breakable)->
     ret = new module.Validation_context
     ret.parent = @
+    ret.breakable = @breakable if pass_breakable
     ret
   
   check_id : (id)->
@@ -61,6 +63,7 @@ class @Validation_context
     if @parent
       return @parent.check_id id
     throw new Error "check_id fail. Id '#{id}' not defined"
+  
 
 # ###################################################################################################
 #    expr
@@ -348,13 +351,13 @@ class @Fn_call
 # ###################################################################################################
 # TODO var_decl check
 class @Scope
-  stmt_list : []
+  list : []
   constructor:()->
-    @stmt_list = []
+    @list = []
   
   validate : (ctx = new module.Validation_context)->
-    ctx_nest = ctx.mk_nest()
-    for stmt in @stmt_list
+    ctx_nest = ctx.mk_nest(true)
+    for stmt in @list
       stmt.validate(ctx_nest)
       # на самом деле валидными есть только Fn_call и assign, но мы об этом умолчим
     return
@@ -378,7 +381,7 @@ class @If
     @t.validate(ctx)
     @f.validate(ctx)
     
-    if @t.stmt_list.length == 0
+    if @t.list.length == 0
       perr "Warning. If empty true body"
     
     return
@@ -407,19 +410,19 @@ class @Switch
     switch @cond.type.main
       when 'int'
         for k,v of @hash
-          if parseInt(k).toString() == k and !isFinite k
+          if parseInt(k).toString() != k or !isFinite k
             throw new Error "Switch validation error. key '#{k}' can't be int"
-      when 'float'
-        for k,v of @hash
-          if !isFinite k
-            throw new Error "Switch validation error. key '#{k}' can't be float"
+      # when 'float' # не разрешаем switch по  float т.к. нельзя сравнивать float'ы через ==
+        # for k,v of @hash
+          # if !isFinite k
+            # throw new Error "Switch validation error. key '#{k}' can't be float"
       when 'string'
         'nothing'
       else
         throw new Error "Switch validation error. Can't implement switch for condition type '#{@cond.type}'"
     
     for k,v of @hash
-      v.validate(ctx)
+      v.validate(ctx.mk_nest())
     
     @f?.validate(ctx)
     
@@ -431,7 +434,43 @@ class @Loop
     @scope = new module.Scope
   
   validate : (ctx = new module.Validation_context)->
-    @scope.validate(ctx)
+    ctx_nest = ctx.mk_nest()
+    ctx_nest.breakable = true
+    @scope.validate(ctx_nest)
+    
+    found = false
+    walk = (t)->
+      switch t.constructor.name
+        when 'Scope'
+          for v in t.list
+            walk v
+        when 'If'
+          walk t.t
+          walk t.f
+        when 'Break', 'Ret'
+          found = true
+    
+    walk @scope
+    if !found
+      throw new Error "Loop validation error. Break or Ret not found"
+    return
+  
+class @Break
+  constructor:()->
+  
+  validate : (ctx = new module.Validation_context)->
+    if !ctx.breakable
+      throw new Error "Break validation error. You can't use break outside loop, while"
+    
+    return
+
+class @Continue
+  constructor:()->
+  
+  validate : (ctx = new module.Validation_context)->
+    if !ctx.breakable
+      throw new Error "Continue validation error. You can't use continue outside loop, while"
+    
     return
 
 class @While

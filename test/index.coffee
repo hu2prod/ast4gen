@@ -9,12 +9,15 @@ c = (val, _type)->
   t.type = type _type
   t
 
+bomb = new mod.Const
+empty_scope = new mod.Scope
+
 describe 'index section', ()->
   describe 'constructor', ()->
     
-    for v in "This Const Array_init Hash_init Struct_init Var Bin_op Un_op Fn_call Scope If Switch Loop While For_range For_array For_hash Ret Try Throw Var_decl Class_decl Fn_decl Closure_decl".split /\s+/g
+    for v in "This Const Array_init Hash_init Struct_init Var Bin_op Un_op Fn_call Scope If Switch Loop Break Continue While For_range For_array For_hash Ret Try Throw Var_decl Class_decl Fn_decl Closure_decl".split /\s+/g
       do (v)->
-        it v, ()-> new mod.This
+        it v, ()-> new mod[v]
     
   describe 'validate type', ()->
     do ()->
@@ -47,7 +50,9 @@ describe 'index section', ()->
         for v in "wtf array<wtf> int<int> int{a:int} float<int> float{a:int} string<int> string{a:int} array array<int>{a:int} hash hash<int>{a:int} struct struct<int>{a:int}".split /\s+/g
           do (v)->
             it v, ()-> test v
-  
+  # ###################################################################################################
+  #    expr
+  # ###################################################################################################
   describe 'Const', ()->
     describe 'bool', ()->
       it 'true', ()->
@@ -164,12 +169,12 @@ describe 'index section', ()->
   describe 'Var', ()->
     it 'ok', ()->
       scope = new mod.Scope
-      scope.stmt_list.push t = new mod.Var_decl
+      scope.list.push t = new mod.Var_decl
       t.name = 'a'
       t.type = type 'int'
       
       console.log "тут другая проблема, нельзя оставлять висячую переменную"
-      scope.stmt_list.push t = new mod.Var
+      scope.list.push t = new mod.Var
       t.name = 'a'
       t.type = type 'int'
       
@@ -190,12 +195,12 @@ describe 'index section', ()->
       
       it 'not as declared type', ()->
         scope = new mod.Scope
-        scope.stmt_list.push t = new mod.Var_decl
+        scope.list.push t = new mod.Var_decl
         t.name = 'a'
         t.type = type 'int'
         
         console.log "тут другая проблема, нельзя оставлять висячую переменную"
-        scope.stmt_list.push t = new mod.Var
+        scope.list.push t = new mod.Var
         t.name = 'a'
         t.type = type 'string'
         
@@ -278,7 +283,7 @@ describe 'index section', ()->
       t
     
     fn = (scope, _type)->
-      scope.stmt_list.push t = new mod.Var_decl
+      scope.list.push t = new mod.Var_decl
       t.name = 'a'
       t.type = type _type
       
@@ -289,61 +294,63 @@ describe 'index section', ()->
     
     it 'function<void>', ()->
       scope = new mod.Scope
-      scope.stmt_list.push fnc(fn(scope, 'function<void>'), [], type 'void')
+      scope.list.push fnc(fn(scope, 'function<void>'), [], type 'void')
       scope.validate()
     
     it 'function<void,int>', ()->
       scope = new mod.Scope
-      scope.stmt_list.push fnc(fn(scope, 'function<void,int>'), [c('1','int')], type 'void')
+      scope.list.push fnc(fn(scope, 'function<void,int>'), [c('1','int')], type 'void')
       scope.validate()
     
     describe 'throws', ()->
       it 'missing', ()->
         scope = new mod.Scope
-        scope.stmt_list.push fnc(null, [], type 'void')
+        scope.list.push fnc(null, [], type 'void')
         assert.throws ()-> scope.validate()
       
       it 'WTF', ()->
         scope = new mod.Scope
-        scope.stmt_list.push fnc(c('1', 'wtf'), [], type 'void')
+        scope.list.push fnc(c('1', 'wtf'), [], type 'void')
         assert.throws ()-> scope.validate()
       
       it 'mismatch1', ()->
         scope = new mod.Scope
-        scope.stmt_list.push fnc(fn(scope, 'function<void>'), [], type 'int')
+        scope.list.push fnc(fn(scope, 'function<void>'), [], type 'int')
         assert.throws ()-> scope.validate()
       
       it 'mismatch2', ()->
         scope = new mod.Scope
-        scope.stmt_list.push fnc(fn(scope, 'function<int>'), [], type 'void')
+        scope.list.push fnc(fn(scope, 'function<int>'), [], type 'void')
         assert.throws ()-> scope.validate()
       
       it 'mismatch3', ()->
         scope = new mod.Scope
-        scope.stmt_list.push fnc(fn(scope, 'function<int>'), [], type 'float')
+        scope.list.push fnc(fn(scope, 'function<int>'), [], type 'float')
         assert.throws ()-> scope.validate()
       
       it 'function<void,int> no int', ()->
         scope = new mod.Scope
-        scope.stmt_list.push fnc(fn(scope, 'function<void,int>'), [], type 'void')
+        scope.list.push fnc(fn(scope, 'function<void,int>'), [], type 'void')
         assert.throws ()-> scope.validate()
       
       it 'function<void> extra arg', ()->
         scope = new mod.Scope
-        scope.stmt_list.push fnc(fn(scope, 'function<void>'), [c('1','int')], type 'void')
+        scope.list.push fnc(fn(scope, 'function<void>'), [c('1','int')], type 'void')
         assert.throws ()-> scope.validate()
       
       it 'function<void,float> with arg int', ()->
         scope = new mod.Scope
-        scope.stmt_list.push fnc(fn(scope, 'function<void,float>'), [c('1','int')], type 'void')
+        scope.list.push fnc(fn(scope, 'function<void,float>'), [c('1','int')], type 'void')
         assert.throws ()-> scope.validate()
-  
+  # ###################################################################################################
+  #    stmt
+  # ###################################################################################################
   describe 'If', ()->
     ifc = (cond, list_t, list_f)->
       t = new mod.If
       t.cond = cond
-      t.t.stmt_list = list_t
-      t.f.stmt_list = list_f
+      t.t.list = list_t
+      t.f.list = list_f
       t
     
     it 'empty', ()->
@@ -354,12 +361,7 @@ describe 'index section', ()->
     
     it 'with some body', ()->
       ifc(c('true', 'bool'), [
-        (()->
-          t = new mod.Var_decl
-          t.name = 'a'
-          t.type = type 'int'
-          t
-        )()
+        empty_scope
       ], []).validate()
     
     describe 'throws', ()->
@@ -369,4 +371,94 @@ describe 'index section', ()->
       it 'string cond', ()->
         assert.throws ()-> ifc(c('true', 'string'), [], []).validate()
       
+      it 'bomb true', ()->
+        assert.throws ()-> ifc(c('true', 'bool'), [bomb], []).validate()
+      
+      it 'bomb false', ()->
+        assert.throws ()-> ifc(c('true', 'bool'), [], [bomb]).validate()
+  
+  describe 'Switch', ()->
+    sw = (cond, hash, list_f=[])->
+      t = new mod.Switch
+      t.cond = cond
+      t.hash = hash
+      t.f.list = list_f
+      t
+    
+    it 'int', ()->
+      sw(c('1', 'int'), {1:empty_scope}, []).validate()
+    
+    it 'string', ()->
+      sw(c('1', 'string'), {1:empty_scope}, []).validate()
+    
+    describe 'throws', ()->
+      it 'empty', ()->
+        assert.throws ()-> sw(c('1', 'int'), {}, []).validate()
+      
+      it 'no cond', ()->
+        assert.throws ()-> sw(null, {1:empty_scope}, []).validate()
+      
+      it 'float cond', ()->
+        assert.throws ()-> sw(c('1', 'float'), {1:empty_scope}, []).validate()
+      
+      it 'wtf cond', ()->
+        assert.throws ()-> sw(c('1', 'wtf'), {1:empty_scope}, []).validate()
+      
+      it 'string key with int cond', ()->
+        assert.throws ()-> sw(c('1', 'int'), {'a':empty_scope}, []).validate()
+      
+      it 'float key with int cond', ()->
+        assert.throws ()-> sw(c('1', 'int'), {'1.1':empty_scope}, []).validate()
+      
+      it 'hash bomb', ()->
+        assert.throws ()-> sw(c('1', 'int'), {1:bomb}, []).validate()
+      
+      it 'false bomb', ()->
+        assert.throws ()-> sw(c('1', 'int'), {1:empty_scope}, [bomb]).validate()
+  
+  describe 'Loop', ()->
+    lp = (list)->
+      t = new mod.Loop
+      t.scope.list = list
+      t
+    brk = new mod.Break
+    ret = new mod.Ret
+    cn  = new mod.Continue
+    ifc = (cond, list_t, list_f)->
+      t = new mod.If
+      t.cond = cond
+      t.t.list = list_t
+      t.f.list = list_f
+      t
+    
+    it 'break', ()->
+      lp([brk]).validate()
+    
+    it 'break if pass test', ()->
+      lp([
+        ifc(c('true', 'bool'), [brk], [])
+      ]).validate()
+    
+    # return out of fn_decl scope not allowed
+    # it 'ret', ()->
+      # lp([ret]).validate()
+    
+    it 'continue check', ()->
+      lp([brk, cn]).validate()
+    
+    describe 'throws', ()->
+      it 'no break', ()->
+        assert.throws ()-> lp([]).validate()
+      
+      it 'bomb scope', ()->
+        assert.throws ()-> lp([bomb]).validate()
+      
+      it 'no break pass through loop', ()->
+        assert.throws ()-> lp([ lp([brk]) ]).validate()
+      
+      it 'break with no loop', ()->
+        assert.throws ()-> brk.validate()
+        assert.throws ()-> cn.validate()
+    
+  
   
