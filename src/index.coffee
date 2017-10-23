@@ -392,6 +392,8 @@ class @If
     if @t.list.length == 0
       perr "Warning. If empty true body"
     
+    if @t.list.length == 0 and @f.list.length == 0
+      throw new Error "Loop validation error. Loop while is not allowed"
     return
 
 # есть следующие валидные случаи компилирования switch
@@ -461,6 +463,9 @@ class @Loop
     walk @scope
     if !found
       throw new Error "Loop validation error. Break or Ret not found"
+    
+    if @scope.list.length == 0
+      throw new Error "Loop validation error. Loop while is not allowed"
     return
   
 class @Break
@@ -496,13 +501,36 @@ class @While
     
     @cond.validate(ctx)
     @scope.validate(ctx)
+    
+    if @scope.list.length == 0
+      throw new Error "While validation error. Empty while is not allowed"
     return
 
 class @For_range
+  exclusive : true
+  i     : null
+  a     : null
+  b     : null
+  step  : null
+  scope : null
+  constructor:()->
+    @scope = new module.Scope
 
 class @For_array
+  k : null
+  v : null
+  t : null
+  scope : null
+  constructor:()->
+    @scope = new module.Scope
 
 class @For_hash
+  k : null
+  v : null
+  t : null
+  scope : null
+  constructor:()->
+    @scope = new module.Scope
 
 class @Ret
   expr : null
@@ -516,6 +544,9 @@ class @Try
   t : null
   c : null
   exception_var_name : ''
+  constructor : ()->
+    @t = new module.Scope
+    @c = new module.Scope
   
 class @Throw
   t : null
