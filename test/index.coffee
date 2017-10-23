@@ -15,6 +15,26 @@ ifc = (cond, list_t, list_f)->
   t.f.list = list_f
   t
 _true = c('true', 'bool')
+_ret = (_t)->
+  t = new mod.Ret
+  t.t  = _t
+  t
+_var = (name, _type)->
+  t = new mod.Var
+  t.name  = name
+  t.type  = type _type
+  t
+fnd = (name, _type, arg_name_list, scope_list)->
+  t = new mod.Fn_decl
+  t.name = name
+  t.arg_name_list = arg_name_list
+  t.type = type _type
+  t.scope.list = scope_list
+  t
+_scope = (scope_list)->
+  t = new mod.Scope
+  t.list = scope_list
+  t
 
 bomb = new mod.Const
 empty_scope = new mod.Scope
@@ -22,7 +42,7 @@ empty_scope = new mod.Scope
 describe 'index section', ()->
   describe 'constructor', ()->
     
-    for v in "This Const Array_init Hash_init Struct_init Var Bin_op Un_op Fn_call Scope If Switch Loop Break Continue While For_range For_array For_hash Ret Try Throw Var_decl Class_decl Fn_decl Closure_decl".split /\s+/g
+    for v in "This Const Array_init Hash_init Struct_init Var Bin_op Un_op Field_access Fn_call Scope If Switch Loop Break Continue While For_range For_array For_hash Ret Try Throw Var_decl Class_decl Fn_decl".split /\s+/g
       do (v)->
         it v, ()-> new mod[v]
     
@@ -160,10 +180,10 @@ describe 'index section', ()->
     it 'a:int', ()->
       s(type('struct{a:int}'),{a:c('1', type('int'))}).validate()
     
+    it 'empty', ()->
+      s(type('struct{a:int}'),{}).validate()
+    
     describe 'throws', ()->
-      it 'empty', ()->
-        s(type('struct{a:int}'),{}).validate()
-      
       it 'no type', ()->
         assert.throws ()-> s(null,{}).validate()
       
@@ -353,11 +373,11 @@ describe 'index section', ()->
   #    stmt
   # ###################################################################################################
   describe 'If', ()->
-    it 'empty', ()->
-      ifc(_true, [], []).validate()
+    it 'basic', ()->
+      ifc(_true, [c('1', 'int')], []).validate()
     
-    it 'empty with int cond', ()->
-      ifc(c('1', 'int'), [], []).validate()
+    it 'basic with int cond', ()->
+      ifc(c('1', 'int'), [c('1', 'int')], []).validate()
     
     it 'with some body', ()->
       ifc(_true, [
@@ -365,6 +385,9 @@ describe 'index section', ()->
       ], []).validate()
     
     describe 'throws', ()->
+      it 'empty', ()->
+        assert.throws ()-> ifc(_true, [], []).validate()
+      
       it 'no cond', ()->
         assert.throws ()-> ifc(null, [], []).validate()
       
@@ -500,9 +523,12 @@ describe 'index section', ()->
       t
     
     it 'ok', ()->
-      lp(_true, []).validate()
+      lp(_true, [c('1', 'int')]).validate()
     
     describe 'throws', ()->
+      it 'empty', ()->
+        assert.throws ()-> lp(_true, []).validate()
+      
       it 'no cond', ()->
         assert.throws ()-> lp(null, [bomb]).validate()
       
@@ -512,4 +538,82 @@ describe 'index section', ()->
       it 'bomb scope', ()->
         assert.throws ()-> lp(_true, [bomb]).validate()
   
+  describe 'Fn_decl', ()->
+    it 'empty', ()->
+      fnd('fn', type('function<void>'), [], []).validate()
+    
+    it '1 param', ()->
+      fnd('fn', type('function<void,int>'), ['a'], []).validate()
+    
+    it '1 param return', ()->
+      fnd('fn', type('function<int,int>'), ['a'], [
+        _ret(_var('a', 'int'))
+      ]).validate()
+    
+    describe 'throws', ()->
+      it 'no name', ()->
+        t = fnd('fn', type('function<void>'), [], [])
+        t.name = ''
+        assert.throws ()-> t.validate()
+      
+      it 'arg name miss', ()->
+        assert.throws ()-> fnd('fn', type('function<void,int>'), [], []).validate()
+      
+      it 'not function type', ()->
+        assert.throws ()-> fnd('fn', type('array<int>'), [], []).validate()
+      
+      it 'alone ret', ()->
+        assert.throws ()-> _ret().validate()
   
+  describe 'Class_decl', ()->
+    cls = (name, scope_list)->
+      t = new mod.Class_decl
+      t.name = name
+      t.scope.list = scope_list
+      t
+    _var_decl = (name, _type)->
+      t = new mod.Var_decl
+      t.name = name
+      t.type = type _type
+      t
+    
+    it 'empty', ()->
+      cls('A', []).validate()
+    
+    it 'prop', ()->
+      cls('A', [
+        _var_decl('prop', 'int')
+      ]).validate()
+    
+    it 'fn', ()->
+      cls('A', [
+        fnd('fn', type('function<void>'), [], [])
+      ]).validate()
+    
+    it 'fn this', ()->
+      _scope([
+        cls('A', [
+          fnd('fn', type('function<void>'), [], [
+            (()->
+              t = new mod.This
+              t.type = type 'A'
+              t
+            )()
+          ])
+        ])
+      ]).validate()
+    
+    describe 'throws', ()->
+      it 'no name', ()->
+        assert.throws ()-> cls('', []).validate()
+      
+      it 'garbage', ()->
+        assert.throws ()-> cls('A', [
+          c('1', 'int')
+        ]).validate()
+      
+      it 'separate this', ()->
+        t = new mod.This
+        t.type = type 'int'
+        assert.throws ()-> t.validate()
+      

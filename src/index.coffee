@@ -1,7 +1,7 @@
 require 'fy'
 module = @
 
-type_validate = (t)->
+type_validate = (t, ctx)->
   if !t
     throw new Error "Type validation error. type is missing"
   switch t.main
@@ -33,36 +33,59 @@ type_validate = (t)->
       ''
       # TODO defined types ...
     else
-      throw new Error "unknown type '#{t}'"
+      if !ctx.check_type t.main
+        throw new Error "unknown type '#{t}'"
   for v,k in t.nest_list
     # continue if k == 0 and t.main == 'function' and v.main == 'void' # it's ok
-    type_validate v
+    type_validate v, ctx
   
   for k,v of t.field_hash
-    type_validate v
+    type_validate v, ctx
   
   return
 
 class @Validation_context
-  parent : null
+  parent    : null
+  executable: false
   breakable : false
+  returnable: false
   type_hash : {}
   var_hash  : {}
+  this_type_name : null
   constructor:()->
     @type_hash = {}
     @var_hash  = {}
   
+  seek_non_executable_parent : ()->
+    if @executable
+      @parent.seek_non_executable_parent()
+    else
+      @
+  
   mk_nest : (pass_breakable)->
     ret = new module.Validation_context
     ret.parent = @
+    ret.this_type_name = @this_type_name
+    ret.returnable= @returnable
+    ret.executable= @executable
     ret.breakable = @breakable if pass_breakable
     ret
+  
+  check_type : (id)->
+    return found if found = @type_hash[id]
+    if @parent
+      return @parent.check_type id
+    return null
+  
   
   check_id : (id)->
     return found if found = @var_hash[id]
     if @parent
       return @parent.check_id id
     return null
+  
+  check_id_decl : (id)->
+    @var_hash[id]
   
 
 # ###################################################################################################
@@ -74,14 +97,16 @@ class @Validation_context
 class @This
   type : null
   validate : (ctx = new module.Validation_context)->
-    type_validate @type
+    type_validate @type, ctx
+    if !ctx.this_type_name
+      throw new Error "This validation error. Can't find this_type_name"
     return
 
 class @Const
   val  : ''
   type : null
   validate : (ctx = new module.Validation_context)->
-    type_validate @type
+    type_validate @type, ctx
     switch @type.main
       when 'bool'
         unless @val in ['true', 'false']
@@ -109,7 +134,7 @@ class @Array_init
     @list = []
   
   validate : (ctx = new module.Validation_context)->
-    type_validate @type
+    type_validate @type, ctx
     if @type.main != 'array'
       throw new Error "Array_init validation error. type must be array but '#{@type}' found"
     
@@ -129,7 +154,7 @@ class @Hash_init
     @hash = {}
   
   validate : (ctx = new module.Validation_context)->
-    type_validate @type
+    type_validate @type, ctx
     if @type.main != 'hash'
       throw new Error "Hash_init validation error. type must be hash but '#{@type}' found"
     
@@ -150,7 +175,7 @@ class @Struct_init
     @hash = {}
   
   validate : (ctx = new module.Validation_context)->
-    type_validate @type
+    type_validate @type, ctx
     if @type.main != 'struct'
       throw new Error "Struct_init validation error. type must be struct but '#{@type}' found"
       
@@ -167,7 +192,7 @@ class @Var
   validate : (ctx = new module.Validation_context)->
     if !/^[_a-z][_a-z0-9]*$/i.test @name
       throw new Error "Var validation error. invalid identifier '#{@name}'"
-    type_validate @type
+    type_validate @type, ctx
     
     var_decl = ctx.check_id(@name)
     if !var_decl
@@ -223,6 +248,8 @@ class @Var
   LT : true
   GTE: true
   LTE: true
+  
+  INDEX_ACCESS : true # a[b] как бинарный оператор
 
 @assign_bin_op_hash = 
   ASSIGN : true
@@ -253,7 +280,7 @@ class @Var
     ['float', 'float', 'float']
     ['string', 'string', 'string']
   ]
-    
+
 class @Bin_op
   a : null
   b : null
@@ -282,7 +309,7 @@ class @Bin_op
     if !found
       throw new Error "Bin_op validation error. Can't apply bin_op=#{@op} to #{@a.type} #{@b.type}"
     
-    type_validate @type
+    type_validate @type, ctx
     return
 
 @allowed_un_op_hash =
@@ -325,8 +352,16 @@ class @Un_op
     if !found
       throw new Error "Un_op validation error. Can't apply un_op=#{@op} to #{@a.type}"
     
-    type_validate @type
+    type_validate @type, ctx
     return
+
+class @Field_access
+  t : null
+  field_name : ''
+  type : ''
+  
+  validate : ()->
+    
 
 class @Fn_call
   fn        : null
@@ -341,7 +376,7 @@ class @Fn_call
       throw new Error "Fn_call validation error. fn missing"
     @fn.validate(ctx)
     
-    type_validate @type
+    type_validate @type, ctx
     if !@type.cmp @fn.type.nest_list[0]
       throw new Error "Fn_call validation error. Return type and function decl return type doesn't match #{@fn.type.nest_list[0]} != #{@type}"
     
@@ -365,6 +400,10 @@ class @Scope
   
   validate : (ctx = new module.Validation_context)->
     ctx_nest = ctx.mk_nest(true)
+    
+    for stmt in @list # for Class_decl
+      stmt.register?(ctx_nest)
+    
     for stmt in @list
       stmt.validate(ctx_nest)
       # на самом деле валидными есть только Fn_call и assign, но мы об этом умолчим
@@ -393,7 +432,7 @@ class @If
       perr "Warning. If empty true body"
     
     if @t.list.length == 0 and @f.list.length == 0
-      throw new Error "Loop validation error. Loop while is not allowed"
+      throw new Error "If validation error. Empty true and false sections"
     return
 
 # есть следующие валидные случаи компилирования switch
@@ -463,9 +502,9 @@ class @Loop
     walk @scope
     if !found
       throw new Error "Loop validation error. Break or Ret not found"
-    
-    if @scope.list.length == 0
-      throw new Error "Loop validation error. Loop while is not allowed"
+    # Не нужен т.к. все-равно ищем break
+    # if @scope.list.length == 0
+      # throw new Error "Loop validation error. Loop while is not allowed"
     return
   
 class @Break
@@ -536,6 +575,9 @@ class @Ret
   t : null
   validate : (ctx = new module.Validation_context)->
     @t?.validate(ctx)
+    if !ctx.returnable
+      throw new Error "Ret validation error. ctx must be returnable"
+    
     return
 # ###################################################################################################
 #    Exceptions
@@ -554,21 +596,74 @@ class @Throw
 #    decl
 # ###################################################################################################
 class @Var_decl
-  name : null
+  name : ''
   type : null
   validate : (ctx = new module.Validation_context)->
-    type_validate @type
-    if ctx.check_id(@name)
+    type_validate @type, ctx
+    if ctx.check_id_decl(@name)
       throw new Error "Var_decl validation error. Redeclare '#{@name}'"
     
     ctx.var_hash[@name] = @
     return
 
 class @Class_decl
+  name  : ''
+  scope : null
+  constructor:()->
+    @scope = new module.Scope
+  
+  register : (ctx = new module.Validation_context)->
+    if ctx.check_type @name
+      throw new Error "Already registered '#{@name}'"
+    ctx.type_hash[@name] = @
+    return
+  
+  validate : (ctx = new module.Validation_context)->
+    if !@name
+      throw new Error "Class_decl validation error. Class should have name"
+    
+    for v in @scope.list
+      unless v.constructor.name in ['Var_decl', 'Fn_decl']
+        throw new Error "Class_decl validation error. Only Var_decl and Fn_decl allowed at Class_decl, but '#{v.constructor.name}' found"
+    
+    ctx_nest = ctx.mk_nest()
+    ctx_nest.this_type_name = @name
+    @scope.validate(ctx_nest)
+    return
 
 class @Fn_decl
-
-class @Closure_decl
-
+  is_closure : false
+  name : ''
+  type : null
+  arg_name_list : []
+  scope : null
+  constructor:()->
+    @arg_name_list = []
+    @scope = new module.Scope
   
-
+  validate : (ctx = new module.Validation_context)->
+    if !@name
+      throw new Error "Fn_decl validation error. Function should have name"
+    
+    type_validate @type, ctx
+    if @type.main != 'function'
+      throw new Error "Fn_decl validation error. Type must be function but '#{@type}' found"
+    if @type.nest_list.length-1 != @arg_name_list.length
+      throw new Error "Fn_decl validation error. @type.nest_list.length-1 != @arg_name_list #{@type.nest_list.length-1} != #{@arg_name_list.length}"
+    
+    if @is_closure
+      ctx_nest = ctx.mk_nest()
+    else
+      ctx_nest = ctx.seek_non_executable_parent().mk_nest()
+    ctx_nest.executable = true
+    ctx_nest.returnable = true
+    
+    for name,k in @arg_name_list
+      decl = new module.Var_decl
+      decl.name = name
+      decl.type = @type.nest_list[1+k]
+      ctx_nest.var_hash[name] = decl
+    
+    @scope.validate(ctx_nest)
+    return
+  
