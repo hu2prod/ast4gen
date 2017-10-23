@@ -8,6 +8,13 @@ c = (val, _type)->
   t.val  = val
   t.type = type _type
   t
+ifc = (cond, list_t, list_f)->
+  t = new mod.If
+  t.cond = cond
+  t.t.list = list_t
+  t.f.list = list_f
+  t
+_true = c('true', 'bool')
 
 bomb = new mod.Const
 empty_scope = new mod.Scope
@@ -28,7 +35,7 @@ describe 'index section', ()->
         t.validate()
         return
       
-      for v in "int float string bool array<int> hash<int> struct{a:int}".split /\s+/g
+      for v in "int float string bool array<int> hash<int> struct{a:int} function<void> function<void,int>".split /\s+/g
         do (v)->
           it v, ()-> test v
     
@@ -47,7 +54,7 @@ describe 'index section', ()->
           assert.throws ()-> t.validate()
           return
         
-        for v in "wtf array<wtf> int<int> int{a:int} float<int> float{a:int} string<int> string{a:int} array array<int>{a:int} hash hash<int>{a:int} struct struct<int>{a:int}".split /\s+/g
+        for v in "wtf array<wtf> int<int> int{a:int} float<int> float{a:int} string<int> string{a:int} array array<int>{a:int} hash hash<int>{a:int} struct struct<int>{a:int} function<> function<void>{a:int}".split /\s+/g
           do (v)->
             it v, ()-> test v
   # ###################################################################################################
@@ -346,21 +353,14 @@ describe 'index section', ()->
   #    stmt
   # ###################################################################################################
   describe 'If', ()->
-    ifc = (cond, list_t, list_f)->
-      t = new mod.If
-      t.cond = cond
-      t.t.list = list_t
-      t.f.list = list_f
-      t
-    
     it 'empty', ()->
-      ifc(c('true', 'bool'), [], []).validate()
+      ifc(_true, [], []).validate()
     
     it 'empty with int cond', ()->
       ifc(c('1', 'int'), [], []).validate()
     
     it 'with some body', ()->
-      ifc(c('true', 'bool'), [
+      ifc(_true, [
         empty_scope
       ], []).validate()
     
@@ -372,10 +372,10 @@ describe 'index section', ()->
         assert.throws ()-> ifc(c('true', 'string'), [], []).validate()
       
       it 'bomb true', ()->
-        assert.throws ()-> ifc(c('true', 'bool'), [bomb], []).validate()
+        assert.throws ()-> ifc(_true, [bomb], []).validate()
       
       it 'bomb false', ()->
-        assert.throws ()-> ifc(c('true', 'bool'), [], [bomb]).validate()
+        assert.throws ()-> ifc(_true, [], [bomb]).validate()
   
   describe 'Switch', ()->
     sw = (cond, hash, list_f=[])->
@@ -424,19 +424,13 @@ describe 'index section', ()->
     brk = new mod.Break
     ret = new mod.Ret
     cn  = new mod.Continue
-    ifc = (cond, list_t, list_f)->
-      t = new mod.If
-      t.cond = cond
-      t.t.list = list_t
-      t.f.list = list_f
-      t
     
     it 'break', ()->
       lp([brk]).validate()
     
     it 'break if pass test', ()->
       lp([
-        ifc(c('true', 'bool'), [brk], [])
+        ifc(_true, [brk], [])
       ]).validate()
     
     # return out of fn_decl scope not allowed
@@ -445,6 +439,44 @@ describe 'index section', ()->
     
     it 'continue check', ()->
       lp([brk, cn]).validate()
+    
+    describe 'Id pass', ()->
+      it 'ok', ()->
+        lp([
+          (()->
+            t = new mod.Var_decl
+            t.name = 'a'
+            t.type = type 'int'
+            t
+          )()
+          lp([
+            (()->
+              t = new mod.Var
+              t.name = 'a'
+              t.type = type 'int'
+              t
+            )()
+            brk
+          ])
+          brk
+        ]).validate()
+      describe 'throws', ()->
+        it 'redeclare', ()->
+          assert.throws ()-> lp([
+            (()->
+              t = new mod.Var_decl
+              t.name = 'a'
+              t.type = type 'int'
+              t
+            )()
+            (()->
+              t = new mod.Var_decl
+              t.name = 'a'
+              t.type = type 'int'
+              t
+            )()
+            brk
+          ]).validate()
     
     describe 'throws', ()->
       it 'no break', ()->
@@ -459,6 +491,25 @@ describe 'index section', ()->
       it 'break with no loop', ()->
         assert.throws ()-> brk.validate()
         assert.throws ()-> cn.validate()
+  
+  describe 'While', ()->
+    lp = (cond, list)->
+      t = new mod.While
+      t.cond = cond
+      t.scope.list = list
+      t
     
+    it 'ok', ()->
+      lp(_true, []).validate()
+    
+    describe 'throws', ()->
+      it 'no cond', ()->
+        assert.throws ()-> lp(null, [bomb]).validate()
+      
+      it 'string cond', ()->
+        assert.throws ()-> lp(c('1', 'string'), []).validate()
+      
+      it 'bomb scope', ()->
+        assert.throws ()-> lp(_true, [bomb]).validate()
   
   

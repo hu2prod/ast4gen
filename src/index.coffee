@@ -62,7 +62,7 @@ class @Validation_context
     return found if found = @var_hash[id]
     if @parent
       return @parent.check_id id
-    throw new Error "check_id fail. Id '#{id}' not defined"
+    return null
   
 
 # ###################################################################################################
@@ -169,9 +169,12 @@ class @Var
       throw new Error "Var validation error. invalid identifier '#{@name}'"
     type_validate @type
     
-    type = ctx.check_id(@name).type
+    var_decl = ctx.check_id(@name)
+    if !var_decl
+      throw new Error "Var validation error. Id '#{id}' not defined"
+    {type} = var_decl
     if !@type.cmp type
-      throw new Error "Var type !+ Var_decl type '#{@type}' != #{type}"
+      throw new Error "Var validation error. Var type !+ Var_decl type '#{@type}' != #{type}"
     return
 
 @allowed_bin_op_hash =
@@ -481,7 +484,11 @@ class @While
   
   validate : (ctx = new module.Validation_context)->
     if !@cond
-      throw new Error "Loop validation error. cond missing"
+      throw new Error "While validation error. cond missing"
+    
+    unless @cond.type.main in ['bool', 'int']
+      throw new Error "While validation error. cond must be bool or int"
+    
     @cond.validate(ctx)
     @scope.validate(ctx)
     return
@@ -515,7 +522,11 @@ class @Var_decl
   type : null
   validate : (ctx = new module.Validation_context)->
     type_validate @type
+    if ctx.check_id(@name)
+      throw new Error "Var_decl validation error. Redeclare '#{@name}'"
+    
     ctx.var_hash[@name] = @
+    return
 
 class @Class_decl
 
