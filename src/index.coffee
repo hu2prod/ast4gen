@@ -217,7 +217,12 @@ class @Var
   ASS_BOOL_OR  : true
   ASS_BOOL_XOR : true
   
-  CMP : true
+  EQ : true
+  NE : true
+  GT : true
+  LT : true
+  GTE: true
+  LTE: true
 
 @assign_bin_op_hash = 
   ASSIGN : true
