@@ -533,9 +533,9 @@ class @For_hash
     @scope = new module.Scope
 
 class @Ret
-  expr : null
+  t : null
   validate : (ctx = new module.Validation_context)->
-    @expr?.validate(ctx)
+    @t?.validate(ctx)
     return
 # ###################################################################################################
 #    Exceptions
