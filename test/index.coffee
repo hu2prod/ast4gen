@@ -35,6 +35,12 @@ _scope = (scope_list)->
   t = new mod.Scope
   t.list = scope_list
   t
+fa = (target, name, _type)->
+  t = new mod.Field_access
+  t.t = target
+  t.name = name
+  t.type = type _type
+  t
 
 bomb = new mod.Const
 empty_scope = new mod.Scope
@@ -183,6 +189,10 @@ describe 'index section', ()->
     it 'empty', ()->
       s(type('struct{a:int}'),{}).validate()
     
+    it 'field access struct', ()->
+      t = s(type('struct{a:int}'),{})
+      fa(t, 'a', 'int').validate()
+    
     describe 'throws', ()->
       it 'no type', ()->
         assert.throws ()-> s(null,{}).validate()
@@ -192,6 +202,25 @@ describe 'index section', ()->
       
       it 'string in struct{a:int}', ()->
         assert.throws ()-> s(type('struct{a:int}'),{a:c('1', type('string'))}).validate()
+      
+      it 'field access null', ()->
+        assert.throws ()-> fa(null, 'a', 'int').validate()
+      
+      it 'field access wrong type', ()->
+        t = s(type('struct{a:int}'),{})
+        assert.throws ()-> fa(t, 'a', 'string').validate()
+      
+      it 'field access empty field', ()->
+        t = s(type('struct{a:int}'),{})
+        assert.throws ()-> fa(t, '', 'int').validate()
+      
+      it 'field access missing field', ()->
+        t = s(type('struct{a:int}'),{})
+        assert.throws ()-> fa(t, 'b', 'int').validate()
+      
+      it 'field access const', ()->
+        t = c('1', 'int')
+        assert.throws ()-> fa(t, 'b', 'int').validate()
   
   describe 'Var', ()->
     it 'ok', ()->

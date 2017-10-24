@@ -357,11 +357,25 @@ class @Un_op
 
 class @Field_access
   t : null
-  field_name : ''
-  type : ''
+  name : ''
+  type : null
   
-  validate : ()->
+  validate : (ctx = new module.Validation_context)->
+    if !@t
+      throw new Error "Field_access validation error. Missing target"
     
+    if !@name
+      throw new Error "Field_access validation error. Missing name"
+    
+    type_validate @type
+    
+    if !nest_type = @t.type.field_hash[@name]
+      throw new Error "Field_access validation error. Access to missing field '#{@name}'"
+    
+    if !@type.cmp nest_type
+      throw new Error "Field_access validation error. Access to field '#{@name}' with type '#{nest_type}' but result '#{@type}'"
+    
+    return
 
 class @Fn_call
   fn        : null
