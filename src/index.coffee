@@ -656,7 +656,7 @@ class @Fn_decl
     @scope = new module.Scope
   
   validate : (ctx = new module.Validation_context)->
-    if !@name
+    if !@name and !@is_closure
       throw new Error "Fn_decl validation error. Function should have name"
     
     type_validate @type, ctx
