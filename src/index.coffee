@@ -301,6 +301,8 @@ class @Bin_op
       throw new Error "Bin_op validation error. b missing"
     @b.validate(ctx)
     
+    type_validate @type, ctx
+    
     if !module.allowed_bin_op_hash[@op]
       throw new Error "Bin_op validation error. Invalid op '#{@op}'"
     
@@ -316,7 +318,6 @@ class @Bin_op
     if !found
       throw new Error "Bin_op validation error. Can't apply bin_op=#{@op} to #{@a.type} #{@b.type}"
     
-    type_validate @type, ctx
     return
 
 @allowed_un_op_hash =
