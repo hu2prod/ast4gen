@@ -286,6 +286,9 @@ describe 'index section', ()->
     it '"1"+"1"', ()->
       bo(string, string, 'ADD', type 'string').validate()
     
+    it 'a:int = 1', ()->
+      bo(int, int, 'ASSIGN', type 'int').validate()
+    
     describe 'throws', ()->
       it 'missing a', ()->
         assert.throws ()-> bo(null, int, 'ADD', type 'int').validate()

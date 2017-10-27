@@ -280,6 +280,13 @@ class @Var
     ['float', 'float', 'float']
     ['string', 'string', 'string']
   ]
+  
+  ASSIGN : [
+    ['int', 'int', 'int']
+    ['bool', 'bool', 'bool']
+    ['float', 'float', 'float']
+    ['string', 'string', 'string']
+  ]
 
 class @Bin_op
   a : null
