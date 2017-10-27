@@ -346,6 +346,8 @@ class @Un_op
       throw new Error "Un_op validation error. a missing"
     @a.validate(ctx)
     
+    type_validate @type, ctx
+    
     if !module.allowed_un_op_hash[@op]
       throw new Error "Un_op validation error. Invalid op '#{@op}'"
     
@@ -360,7 +362,6 @@ class @Un_op
     if !found
       throw new Error "Un_op validation error. Can't apply un_op=#{@op} to #{@a.type}"
     
-    type_validate @type, ctx
     return
 
 class @Field_access
