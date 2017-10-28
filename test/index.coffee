@@ -646,6 +646,16 @@ describe 'index section', ()->
         fa(_var('a', 'A'), 'prop', 'int')
       ]).validate()
     
+    it 'field access in method over this', ()->
+      _scope([
+        cls('A', [
+          _var_decl('prop', 'int')
+          fnd('fn', type('function<void>'), [], [
+            fa(_var('this', 'A'), 'prop', 'int')
+          ])
+        ])
+      ]).validate()
+    
     describe 'throws', ()->
       it 'no name', ()->
         assert.throws ()-> cls('', []).validate()
