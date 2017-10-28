@@ -656,6 +656,21 @@ describe 'index section', ()->
         ])
       ]).validate()
     
+    it 'field access in method over this v2', ()->
+      _scope([
+        cls('A', [
+          _var_decl('prop', 'int')
+          fnd('fn', type('function<void>'), [], [
+            fa((
+              ()->
+                ret = new mod.This
+                ret.type = new Type 'A'
+                ret
+            )(), 'prop', 'int')
+          ])
+        ])
+      ]).validate()
+    
     describe 'throws', ()->
       it 'no name', ()->
         assert.throws ()-> cls('', []).validate()
@@ -666,6 +681,17 @@ describe 'index section', ()->
             cls('A', [])
             cls('A', [])
           ]).validate()
+      
+      # Потом
+      # it 'wrong this type', ()->
+      #   _scope([
+      #     cls('A', [
+      #       _var_decl('prop', 'int')
+      #       fnd('fn', type('function<void>'), [], [
+      #         _var('this', 'int')
+      #       ])
+      #     ])
+      #   ]).validate()
       
       it 'garbage', ()->
         assert.throws ()-> cls('A', [
