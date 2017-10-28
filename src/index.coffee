@@ -210,6 +210,7 @@ class @Var
   SUB : true
   MUL : true
   DIV : true
+  DIV_INT: true
   MOD : true
   POW : true
   
@@ -230,6 +231,7 @@ class @Var
   ASS_SUB : true
   ASS_MUL : true
   ASS_DIV : true
+  ASS_DIV_INT: true
   ASS_MOD : true
   ASS_POW : true
   
@@ -276,20 +278,70 @@ class @Var
   ASS_BOOL_XOR : true
 
 @bin_op_ret_type_hash_list =
-  ADD : [
+  DIV : [
+    ['int', 'int', 'float']
+    ['int', 'float', 'float']
+    ['float', 'int', 'float']
+    ['float', 'float', 'float']
+  ]
+  DIV_INT : [
+    ['int', 'int', 'int']
+    ['int', 'float', 'int']
+    ['float', 'int', 'int']
+    ['float', 'float', 'int']
+  ]
+# mix int float -> higher
+for v in "ADD SUB MUL POW".split  /\s+/g
+  @bin_op_ret_type_hash_list[v] = [
     ['int', 'int', 'int']
     ['int', 'float', 'float']
     ['float', 'int', 'float']
     ['float', 'float', 'float']
-    ['string', 'string', 'string']
   ]
-  
-  ASSIGN : [
+# pure int
+for v in "MOD BIT_AND BIT_OR BIT_XOR SHR SHL LSR".split  /\s+/g
+  @bin_op_ret_type_hash_list[v] = [['int', 'int', 'int']]
+# pure bool
+for v in "BOOL_AND BOOL_OR BOOL_XOR".split  /\s+/g
+  @bin_op_ret_type_hash_list[v] = [['bool', 'bool', 'bool']]
+# special string magic
+@bin_op_ret_type_hash_list.ADD.push ['string', 'string', 'string']
+@bin_op_ret_type_hash_list.MUL.push ['string', 'int', 'string']
+# equal ops =, cmp
+for v in "ASSIGN EQ NE GT LT GTE LTE".split  /\s+/g
+  @bin_op_ret_type_hash_list[v] = [
     ['int', 'int', 'int']
     ['bool', 'bool', 'bool']
     ['float', 'float', 'float']
     ['string', 'string', 'string']
   ]
+str_list = """
+ADD
+SUB
+MUL
+DIV
+DIV_INT
+MOD
+POW
+
+SHR
+SHL
+LSR
+
+BIT_AND 
+BIT_OR  
+BIT_XOR 
+
+BOOL_AND
+BOOL_OR 
+BOOL_XOR
+"""
+for v in str_list.split  /\s+/g
+  table = @bin_op_ret_type_hash_list[v]
+  table = table.filter (row)->row[0] == row[2]
+  table = table.map (t)-> t.clone() # make safe
+  @bin_op_ret_type_hash_list["ASS_#{v}"] = table
+
 
 class @Bin_op
   a : null
@@ -336,12 +388,30 @@ class @Bin_op
   # delete ?
 
 @un_op_ret_type_hash_list =
+  INC_RET : [
+    ['int', 'int']
+  ]
+  RET_INC : [
+    ['int', 'int']
+  ]
+  DEC_RET : [
+    ['int', 'int']
+  ]
+  RET_DEC : [
+    ['int', 'int']
+  ]
   BOOL_NOT : [
     ['bool', 'bool']
+  ]
+  BIT_NOT : [
+    ['int', 'int']
   ]
   MINUS : [
     ['int', 'int']
     ['float', 'float']
+  ]
+  PLUS : [
+    ['string', 'float']
   ]
 class @Un_op
   a   : null
