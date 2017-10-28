@@ -710,8 +710,10 @@ class @Var_decl
 class @Class_decl
   name  : ''
   scope : null
+  _prepared_field2type : {}
   constructor:()->
     @scope = new module.Scope
+    @_prepared_field2type = {}
   
   register : (ctx = new module.Validation_context)->
     if ctx.check_type @name
