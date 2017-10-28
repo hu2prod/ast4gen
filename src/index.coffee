@@ -1,4 +1,5 @@
 require 'fy'
+Type = require 'type'
 module = @
 
 type_validate = (t, ctx)->
@@ -54,7 +55,9 @@ class @Validation_context
   this_type_name : null
   constructor:()->
     @type_hash = {}
-    @var_hash  = {}
+    @var_hash  =
+      true : new Type 'bool'
+      false: new Type 'bool'
   
   seek_non_executable_parent : ()->
     if @executable
@@ -333,6 +336,9 @@ class @Bin_op
   # delete ?
 
 @un_op_ret_type_hash_list =
+  BOOL_NOT : [
+    ['bool', 'bool']
+  ]
   MINUS : [
     ['int', 'int']
     ['float', 'float']

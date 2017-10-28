@@ -89,9 +89,9 @@ describe 'index section', ()->
   describe 'Const', ()->
     describe 'bool', ()->
       it 'true', ()->
-        c('true', 'string').validate()
+        c('true', 'bool').validate()
       it 'false', ()->
-        c('true', 'string').validate()
+        c('true', 'bool').validate()
       it 'wtf', ()->
         assert.throws ()-> c('wtf', 'bool').validate()
     
