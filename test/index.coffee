@@ -637,9 +637,25 @@ describe 'index section', ()->
         ])
       ]).validate()
     
+    it 'field access class', ()->
+      _scope([
+        cls('A', [
+          _var_decl('prop', 'int')
+        ])
+        _var_decl('a', 'A')
+        fa(_var('a', 'A'), 'prop', 'int')
+      ]).validate()
+    
     describe 'throws', ()->
       it 'no name', ()->
         assert.throws ()-> cls('', []).validate()
+      
+      it 'reregister', ()->
+        assert.throws ()->
+          _scope([
+            cls('A', [])
+            cls('A', [])
+          ]).validate()
       
       it 'garbage', ()->
         assert.throws ()-> cls('A', [
@@ -650,4 +666,13 @@ describe 'index section', ()->
         t = new mod.This
         t.type = type 'int'
         assert.throws ()-> t.validate()
+    
+      it 'field access class wrong field', ()->
+        assert.throws ()-> _scope([
+          cls('A', [
+            _var_decl('prop', 'int')
+          ])
+          _var_decl('a', 'A')
+          fa(_var('a', 'A'), 'wtf', 'int')
+        ]).validate()
       

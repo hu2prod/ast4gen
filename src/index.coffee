@@ -455,8 +455,13 @@ class @Field_access
     
     type_validate @type
     
-    if !nest_type = @t.type.field_hash[@name]
-      throw new Error "Field_access validation error. Access to missing field '#{@name}'"
+    if @t.type.main == 'struct'
+      if !nest_type = @t.type.field_hash[@name]
+        throw new Error "Field_access validation error. Access to missing field '#{@name}'. Possible keys [#{Object.keys(@t.type.field_hash).join ', '}]"
+    else
+      class_decl = ctx.check_type @t.type.main
+      if !nest_type = class_decl._prepared_field2type[@name]
+        throw new Error "Field_access validation error. Access to missing class field '#{@name}'. Possible keys [#{Object.keys(class_decl._prepared_field2type).join ', '}]"
     
     if !@type.cmp nest_type
       throw new Error "Field_access validation error. Access to field '#{@name}' with type '#{nest_type}' but result '#{@type}'"
@@ -725,9 +730,11 @@ class @Class_decl
     if !@name
       throw new Error "Class_decl validation error. Class should have name"
     
+    @_prepared_field2type = {} # ensure reset (some generators rewrite this field)
     for v in @scope.list
       unless v.constructor.name in ['Var_decl', 'Fn_decl']
         throw new Error "Class_decl validation error. Only Var_decl and Fn_decl allowed at Class_decl, but '#{v.constructor.name}' found"
+      @_prepared_field2type[v.name] = v.type
     
     ctx_nest = ctx.mk_nest()
     ctx_nest.this_type_name = @name
