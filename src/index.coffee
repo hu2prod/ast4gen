@@ -118,8 +118,8 @@ class @Const
         if parseInt(@val).toString() != @val
           throw new Error "Const validation error. '#{@val}' can't be int"
       when 'float'
-        if parseFloat(@val).toString() != @val
-          throw new Error "Const validation error. '#{@val}' can't be int"
+        if parseFloat(@val.replace(/\.?0+$/, '')).toString() != @val
+          throw new Error "Const validation error. '#{@val}' can't be float"
       when 'string'
         'nothing'
         # string will be quoted and escaped
