@@ -118,7 +118,8 @@ class @Const
         if parseInt(@val).toString() != @val
           throw new Error "Const validation error. '#{@val}' can't be int"
       when 'float'
-        if parseFloat(@val.replace(/\.?0+$/, '')).toString() != @val
+        val = @val.replace(/\.?0+$/, '')
+        if parseFloat(val).toString() != val
           throw new Error "Const validation error. '#{@val}' can't be float"
       when 'string'
         'nothing'

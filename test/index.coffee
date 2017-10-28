@@ -111,6 +111,8 @@ describe 'index section', ()->
       it 'int', ()->
         c('1', 'float').validate()
       it 'float', ()->
+        c('1.0', 'float').validate()
+      it 'float', ()->
         c('1.1', 'float').validate()
       it 'fail string', ()->
         assert.throws ()-> c('a', 'float').validate()
