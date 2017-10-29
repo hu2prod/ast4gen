@@ -694,6 +694,136 @@ describe 'index section', ()->
           ])
         ]).validate()
   
+  describe 'For_col', ()->
+    fc = (k, v, _t, list)->
+      t = new mod.For_col
+      t.k = k
+      t.v = v
+      t.t = _t
+      t.scope.list = list
+      t
+    
+    it 'ok', ()->
+      _scope([
+        _var_decl('t', 'array<string>')
+        _var_decl('k', 'int')
+        _var_decl('v', 'string')
+        fc(_var('k', 'int'), _var('v', 'string'), _var('t', 'array<string>'), [
+          c('0', 'int')
+        ])
+      ]).validate()
+    
+    it 'no k', ()->
+      _scope([
+        _var_decl('t', 'array<string>')
+        _var_decl('k', 'int')
+        _var_decl('v', 'string')
+        fc(null, _var('v', 'string'), _var('t', 'array<string>'), [
+          c('0', 'int')
+        ])
+      ]).validate()
+    
+    it 'no v', ()->
+      _scope([
+        _var_decl('t', 'array<string>')
+        _var_decl('k', 'int')
+        _var_decl('v', 'string')
+        fc(_var('k', 'int'), null, _var('t', 'array<string>'), [
+          c('0', 'int')
+        ])
+      ]).validate()
+    
+    it 'ok hash', ()->
+      _scope([
+        _var_decl('t', 'hash<int>')
+        _var_decl('k', 'string')
+        _var_decl('v', 'int')
+        fc(_var('k', 'string'), _var('v', 'int'), _var('t', 'hash<int>'), [
+          c('0', 'int')
+        ])
+      ]).validate()
+    
+    it 'no k hash', ()->
+      _scope([
+        _var_decl('t', 'hash<int>')
+        _var_decl('k', 'string')
+        _var_decl('v', 'int')
+        fc(null, _var('v', 'int'), _var('t', 'hash<int>'), [
+          c('0', 'int')
+        ])
+      ]).validate()
+    
+    it 'no v hash', ()->
+      _scope([
+        _var_decl('t', 'hash<int>')
+        _var_decl('k', 'string')
+        _var_decl('v', 'int')
+        fc(_var('k', 'string'), null, _var('t', 'hash<int>'), [
+          c('0', 'int')
+        ])
+      ]).validate()
+    
+    describe 'throws', ()->
+      it 'no target', ()->
+        assert.throws ()-> _scope([
+          _var_decl('t', 'array<string>')
+          _var_decl('k', 'int')
+          _var_decl('v', 'string')
+          fc(_var('k', 'int'), _var('v', 'string'), null, [
+            c('0', 'int')
+          ])
+        ]).validate()
+      
+      it 'target int', ()->
+        assert.throws ()-> _scope([
+          _var_decl('t', 'int')
+          _var_decl('k', 'int')
+          _var_decl('v', 'string')
+          fc(_var('k', 'int'), _var('v', 'string'), _var('t', 'int'), [
+            c('0', 'int')
+          ])
+        ]).validate()
+    
+      it 'not k and v', ()->
+        assert.throws ()-> _scope([
+          _var_decl('t', 'array<string>')
+          _var_decl('k', 'int')
+          _var_decl('v', 'string')
+          fc(null, null, _var('t', 'array<string>'), [
+            c('0', 'int')
+          ])
+        ]).validate()
+    
+      it 'wrong k type array', ()->
+        assert.throws ()-> _scope([
+          _var_decl('t', 'array<string>')
+          _var_decl('k', 'string')
+          _var_decl('v', 'string')
+          fc(_var('k', 'string'), _var('v', 'string'), _var('t', 'array<string>'), [
+            c('0', 'int')
+          ])
+        ]).validate()
+    
+      it 'wrong k type hash', ()->
+        assert.throws ()-> _scope([
+          _var_decl('t', 'hash<int>')
+          _var_decl('k', 'int')
+          _var_decl('v', 'int')
+          fc(_var('k', 'int'), _var('v', 'int'), _var('t', 'hash<int>'), [
+            c('0', 'int')
+          ])
+        ]).validate()
+    
+      it 'wrong v type', ()->
+        assert.throws ()-> _scope([
+          _var_decl('t', 'array<string>')
+          _var_decl('k', 'int')
+          _var_decl('v', 'int')
+          fc(_var('k', 'int'), _var('v', 'int'), _var('t', 'array<string>'), [
+            c('0', 'int')
+          ])
+        ]).validate()
+  
   describe 'Fn_decl', ()->
     ret = new mod.Ret
     it 'empty', ()->

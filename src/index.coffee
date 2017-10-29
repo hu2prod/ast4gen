@@ -694,6 +694,35 @@ class @For_col
   scope : null
   constructor:()->
     @scope = new module.Scope
+  
+  validate : (ctx = new module.Validation_context)->
+    if !@t
+      throw new Error "For_col validation error. Target is missing"
+    if !@k and !@v
+      throw new Error "For_col validation error. Key and value is missing"
+    
+    @t.validate ctx
+    @k?.validate ctx
+    @v?.validate ctx
+    
+    switch @t.type.main
+      when 'array'
+        if @k
+          unless @k.type.main == 'int'
+            throw new Error "For_col validation error. Key must be int for array<t> target but found '#{@k.type}'"
+      when 'hash'
+        if @k
+          unless @k.type.main == 'string'
+            throw new Error "For_col validation error. Key must be string for hash<t> target but found '#{@k.type}'"
+      else
+        throw new Error "For_col validation error. For_col accepts types array<t> and hash<t> but found '#{@t.type}'"
+      
+    if @v
+      unless @v.type.cmp @t.type.nest_list[0]
+        throw new Error "For_col validation error. Value must be '#{@t.type.nest_list[0]}' but found '#{@v.type}'"
+    
+    @scope.validate ctx
+    return
 
 class @Ret
   t : null
