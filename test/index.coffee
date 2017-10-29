@@ -638,6 +638,29 @@ describe 'index section', ()->
             c('0', 'int')
           ])
         ]).validate()
+       
+      it 'missing iterator', ()->
+        assert.throws ()-> _scope([
+          fr(null, c('1', 'int'), c('10', 'int'), null, [
+            c('0', 'int')
+          ])
+        ]).validate()
+      
+      it 'missing a', ()->
+        assert.throws ()-> _scope([
+          _var_decl('i', 'int')
+          fr(_var('i', 'int'), null, c('10', 'int'), null, [
+            c('0', 'int')
+          ])
+        ]).validate()
+      
+      it 'missing b', ()->
+        assert.throws ()-> _scope([
+          _var_decl('i', 'int')
+          fr(_var('i', 'int'), c('1', 'int'), null, null, [
+            c('0', 'int')
+          ])
+        ]).validate()
       
       it 'string step', ()->
         assert.throws ()-> _scope([

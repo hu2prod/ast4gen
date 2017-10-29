@@ -652,6 +652,13 @@ class @For_range
     @scope = new module.Scope
   
   validate : (ctx = new module.Validation_context)->
+    if !@i
+      throw new Error "While validation error. Iterator is missing"
+    if !@a
+      throw new Error "While validation error. Range a is missing"
+    if !@b
+      throw new Error "While validation error. Range b is missing"
+    
     @i.validate ctx
     @a.validate ctx
     @b.validate ctx
