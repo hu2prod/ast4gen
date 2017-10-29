@@ -53,7 +53,7 @@ empty_scope = new mod.Scope
 describe 'index section', ()->
   describe 'constructor', ()->
     
-    for v in "Const Array_init Hash_init Struct_init Var Bin_op Un_op Field_access Fn_call Scope If Switch Loop Break Continue While For_range For_array For_hash Ret Try Throw Var_decl Class_decl Fn_decl".split /\s+/g
+    for v in "Const Array_init Hash_init Struct_init Var Bin_op Un_op Field_access Fn_call Scope If Switch Loop Break Continue While For_range For_col Ret Try Throw Var_decl Class_decl Fn_decl".split /\s+/g
       do (v)->
         it v, ()-> new mod[v]
     

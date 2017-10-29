@@ -687,15 +687,7 @@ class @For_range
     @scope.validate ctx
     return
 
-class @For_array
-  k : null
-  v : null
-  t : null
-  scope : null
-  constructor:()->
-    @scope = new module.Scope
-
-class @For_hash
+class @For_col
   k : null
   v : null
   t : null
