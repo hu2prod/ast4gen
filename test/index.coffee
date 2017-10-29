@@ -368,15 +368,27 @@ describe 'index section', ()->
       scope.list.push fnc(fn(scope, 'function<void,int>'), [c('1','int')], type 'void')
       scope.validate()
     
+    it 'function<void> with decl', ()->
+      scope = new mod.Scope
+      scope.list.push fnd('fn', type('function<void>'), [], [])
+      scope.list.push fnc(_var('fn', 'function<void>'), [], type 'void')
+      scope.validate()
+    
+    it 'function<void,int> with decl', ()->
+      scope = new mod.Scope
+      scope.list.push fnd('fn', type('function<void,int>'), ['a'], [])
+      scope.list.push fnc(_var('fn', 'function<void,int>'), [c('1','int')], type 'void')
+      scope.validate()
+    
     describe 'throws', ()->
       it 'missing', ()->
         scope = new mod.Scope
         scope.list.push fnc(null, [], type 'void')
         assert.throws ()-> scope.validate()
       
-      it 'WTF', ()->
+      it 'call int', ()->
         scope = new mod.Scope
-        scope.list.push fnc(c('1', 'wtf'), [], type 'void')
+        scope.list.push fnc(c('1', 'int'), [], type 'void')
         assert.throws ()-> scope.validate()
       
       it 'mismatch1', ()->

@@ -2,6 +2,7 @@ require 'fy'
 Type = require 'type'
 module = @
 
+void_type = new Type 'void'
 type_validate = (t, ctx)->
   if !t
     throw new Error "Type validation error. type is missing"
@@ -472,8 +473,12 @@ class @Fn_call
     if !@fn
       throw new Error "Fn_call validation error. fn missing"
     @fn.validate(ctx)
+    if @fn.type.main != 'function'
+      throw new Error "Fn_call validation error. Can't call type '@fn.type'. You can call only function"
     
-    type_validate @type, ctx
+    if !@type.cmp void_type
+      type_validate @type, ctx
+    
     if !@type.cmp @fn.type.nest_list[0]
       throw new Error "Fn_call validation error. Return type and function decl return type doesn't match #{@fn.type.nest_list[0]} != #{@type}"
     
@@ -839,5 +844,10 @@ class @Fn_decl
     ctx_nest.var_hash["$_return_type"] = @type.nest_list[0]
     
     @scope.validate(ctx_nest)
+    
+    var_decl = new module.Var_decl
+    var_decl.name = @name
+    var_decl.type = @type
+    ctx.var_hash[@name] = var_decl
     return
   
