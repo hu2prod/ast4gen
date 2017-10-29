@@ -479,7 +479,6 @@ describe 'index section', ()->
       t.scope.list = list
       t
     brk = new mod.Break
-    ret = new mod.Ret
     cn  = new mod.Continue
     
     it 'break', ()->
@@ -489,10 +488,6 @@ describe 'index section', ()->
       lp([
         ifc(_true, [brk], [])
       ]).validate()
-    
-    # return out of fn_decl scope not allowed
-    # it 'ret', ()->
-      # lp([ret]).validate()
     
     it 'continue check', ()->
       lp([brk, cn]).validate()
@@ -573,6 +568,7 @@ describe 'index section', ()->
         assert.throws ()-> lp(_true, [bomb]).validate()
   
   describe 'Fn_decl', ()->
+    ret = new mod.Ret
     it 'empty', ()->
       fnd('fn', type('function<void>'), [], []).validate()
     
@@ -584,7 +580,25 @@ describe 'index section', ()->
         _ret(_var('a', 'int'))
       ]).validate()
     
+    it '1 param + return', ()->
+      fnd('fn', type('function<void,int>'), ['a'], [
+        ret
+      ]).validate()
+    
     describe 'throws', ()->
+      it 'return out of fn_decl scope not allowed', ()->
+        assert.throws ()-> lp([ret]).validate()
+      
+      it '1 param + return int but void expected', ()->
+        assert.throws ()-> fnd('fn', type('function<void,int>'), ['a'], [
+          _ret(c('1', 'int'))
+        ]).validate()
+      
+      it '1 param + return void but int expected', ()->
+        assert.throws ()-> fnd('fn', type('function<int,int>'), ['a'], [
+          ret
+        ]).validate()
+      
       it 'no name', ()->
         t = fnd('fn', type('function<void>'), [], [])
         t.name = ''
@@ -622,6 +636,20 @@ describe 'index section', ()->
     it 'fn', ()->
       cls('A', [
         fnd('fn', type('function<void>'), [], [])
+      ]).validate()
+    
+    it 'fn this', ()->
+      _scope([
+        cls('A', [
+          fnd('fn', type('function<void>'), [], [
+            (()->
+              t = new mod.Var
+              t.name = 'this'
+              t.type = type 'A'
+              t
+            )()
+          ])
+        ])
       ]).validate()
     
     it 'fn this', ()->

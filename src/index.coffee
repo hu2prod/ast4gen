@@ -674,6 +674,15 @@ class @Ret
     if !ctx.returnable
       throw new Error "Ret validation error. ctx must be returnable"
     
+    return_type = ctx.check_id "$_return_type"
+    if @t?
+      if !@t.type.cmp return_type
+        throw new Error "Ret validation error. Ret type must be '#{return_type}' but found '#{@t.type}'"
+    else
+      if return_type.main != 'void'
+        throw new Error "Ret validation error. Ret type must be '#{return_type}' but found void (no return value)"
+    
+    
     return
 # ###################################################################################################
 #    Exceptions
@@ -767,6 +776,8 @@ class @Fn_decl
       decl.name = name
       decl.type = @type.nest_list[1+k]
       ctx_nest.var_hash[name] = decl
+    
+    ctx_nest.var_hash["$_return_type"] = @type.nest_list[0]
     
     @scope.validate(ctx_nest)
     return
