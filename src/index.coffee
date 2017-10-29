@@ -653,11 +653,11 @@ class @For_range
   
   validate : (ctx = new module.Validation_context)->
     if !@i
-      throw new Error "While validation error. Iterator is missing"
+      throw new Error "For_range validation error. Iterator is missing"
     if !@a
-      throw new Error "While validation error. Range a is missing"
+      throw new Error "For_range validation error. Range a is missing"
     if !@b
-      throw new Error "While validation error. Range b is missing"
+      throw new Error "For_range validation error. Range b is missing"
     
     @i.validate ctx
     @a.validate ctx
