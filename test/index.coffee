@@ -24,6 +24,11 @@ _var = (name, _type)->
   t.name  = name
   t.type  = type _type
   t
+_var_decl = (name, _type)->
+  t = new mod.Var_decl
+  t.name = name
+  t.type = type _type
+  t
 fnd = (name, _type, arg_name_list, scope_list)->
   t = new mod.Fn_decl
   t.name = name
@@ -567,6 +572,105 @@ describe 'index section', ()->
       it 'bomb scope', ()->
         assert.throws ()-> lp(_true, [bomb]).validate()
   
+  describe 'For_range', ()->
+    fr = (i, a, b, step, list)->
+      t = new mod.For_range
+      t.i = i
+      t.a = a
+      t.b = b
+      t.step = step
+      t.scope.list = list
+      t
+    
+    it 'ok', ()->
+      _scope([
+        _var_decl('i', 'int')
+        fr(_var('i', 'int'), c('1', 'int'), c('10', 'int'), null, [
+          c('0', 'int')
+        ])
+      ]).validate()
+    
+    it 'step', ()->
+      _scope([
+        _var_decl('i', 'int')
+        fr(_var('i', 'int'), c('1', 'int'), c('10', 'int'), c('2', 'int'), [
+          c('0', 'int')
+        ])
+      ]).validate()
+    
+    it 'float step', ()->
+      _scope([
+        _var_decl('i', 'float')
+        fr(_var('i', 'float'), c('1', 'float'), c('10', 'float'), c('2', 'float'), [
+          c('0', 'int')
+        ])
+      ]).validate()
+      
+    it 'float iterator int range int step', ()->
+      _scope([
+        _var_decl('i', 'float')
+        fr(_var('i', 'float'), c('1', 'int'), c('10', 'int'), c('2', 'int'), [
+          c('0', 'int')
+        ])
+      ]).validate()
+    
+    describe 'throws', ()->
+      it 'string iterator', ()->
+        assert.throws ()-> _scope([
+          _var_decl('i', 'string')
+          fr(_var('i', 'string'), c('1', 'int'), c('10', 'int'), null, [
+            c('0', 'int')
+          ])
+        ]).validate()
+      
+      it 'string a', ()->
+        assert.throws ()-> _scope([
+          _var_decl('i', 'int')
+          fr(_var('i', 'int'), c('1', 'string'), c('10', 'int'), null, [
+            c('0', 'int')
+          ])
+        ]).validate()
+      
+      it 'string b', ()->
+        assert.throws ()-> _scope([
+          _var_decl('i', 'int')
+          fr(_var('i', 'int'), c('1', 'int'), c('10', 'string'), null, [
+            c('0', 'int')
+          ])
+        ]).validate()
+      
+      it 'string step', ()->
+        assert.throws ()-> _scope([
+          _var_decl('i', 'int')
+          fr(_var('i', 'int'), c('1', 'int'), c('10', 'int'), c('2', 'string'), [
+            c('0', 'int')
+          ])
+        ]).validate()
+      
+      it 'int iterator float step', ()->
+        assert.throws ()-> _scope([
+          _var_decl('i', 'int')
+          fr(_var('i', 'int'), c('1', 'int'), c('10', 'int'), c('2', 'float'), [
+            c('0', 'int')
+          ])
+        ]).validate()
+      
+      it 'int iterator float range a', ()->
+        assert.throws ()-> _scope([
+          _var_decl('i', 'int')
+          fr(_var('i', 'int'), c('1', 'float'), c('10', 'int'), null, [
+            c('0', 'int')
+          ])
+        ]).validate()
+      
+      it 'int iterator float range b', ()->
+        assert.throws ()-> _scope([
+          _var_decl('i', 'int')
+          fr(_var('i', 'int'), c('1', 'int'), c('10', 'float'), null, [
+            c('0', 'int')
+          ])
+        ]).validate()
+  
   describe 'Fn_decl', ()->
     ret = new mod.Ret
     it 'empty', ()->
@@ -618,11 +722,6 @@ describe 'index section', ()->
       t = new mod.Class_decl
       t.name = name
       t.scope.list = scope_list
-      t
-    _var_decl = (name, _type)->
-      t = new mod.Var_decl
-      t.name = name
-      t.type = type _type
       t
     
     it 'empty', ()->

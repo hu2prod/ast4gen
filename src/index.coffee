@@ -650,6 +650,35 @@ class @For_range
   scope : null
   constructor:()->
     @scope = new module.Scope
+  
+  validate : (ctx = new module.Validation_context)->
+    @i.validate ctx
+    @a.validate ctx
+    @b.validate ctx
+    @step?.validate ctx
+    
+    unless @i.type.main in ['int', 'float']
+      throw new Error "For_range validation error. Iterator should be type int or float but '#{@i.type}' found"
+    unless @a.type.main in ['int', 'float']
+      throw new Error "For_range validation error. Range a should be type int or float but '#{@a.type}' found"
+    unless @b.type.main in ['int', 'float']
+      throw new Error "For_range validation error. Range b should be type int or float but '#{@b.type}' found"
+    if @step
+      unless @step.type.main in ['int', 'float']
+        throw new Error "For_range validation error. Step should be type int or float but '#{@step.type}' found"
+    
+    if @i.type.main == 'int'
+      unless @a.type.main == 'int'
+        throw new Error "For_range validation error. Range a should be type int because iterator is int but '#{@a.type}' found"
+      unless @b.type.main == 'int'
+        throw new Error "For_range validation error. Range b should be type int because iterator is int but '#{@b.type}' found"
+      
+      if @step
+        unless @step.type.main == 'int'
+          throw new Error "For_range validation error. Step should be type int because iterator is int but '#{@step.type}' found"
+    
+    @scope.validate ctx
+    return
 
 class @For_array
   k : null
