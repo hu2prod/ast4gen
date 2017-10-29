@@ -5,6 +5,8 @@ module = @
 type_validate = (t, ctx)->
   if !t
     throw new Error "Type validation error. type is missing"
+  # if !ctx # JUST for debug
+    # throw new Error "WTF"
   switch t.main
     when 'void', 'int', 'float', 'string', 'bool'
       if t.nest_list.length != 0
@@ -443,7 +445,7 @@ class @Field_access
     if !@name
       throw new Error "Field_access validation error. Missing name"
     
-    type_validate @type
+    type_validate @type, ctx
     
     if @t.type.main == 'struct'
       if !nest_type = @t.type.field_hash[@name]
