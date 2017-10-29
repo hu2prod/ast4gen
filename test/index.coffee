@@ -48,7 +48,7 @@ empty_scope = new mod.Scope
 describe 'index section', ()->
   describe 'constructor', ()->
     
-    for v in "This Const Array_init Hash_init Struct_init Var Bin_op Un_op Field_access Fn_call Scope If Switch Loop Break Continue While For_range For_array For_hash Ret Try Throw Var_decl Class_decl Fn_decl".split /\s+/g
+    for v in "Const Array_init Hash_init Struct_init Var Bin_op Un_op Field_access Fn_call Scope If Switch Loop Break Continue While For_range For_array For_hash Ret Try Throw Var_decl Class_decl Fn_decl".split /\s+/g
       do (v)->
         it v, ()-> new mod[v]
     
@@ -629,7 +629,8 @@ describe 'index section', ()->
         cls('A', [
           fnd('fn', type('function<void>'), [], [
             (()->
-              t = new mod.This
+              t = new mod.Var
+              t.name = 'this'
               t.type = type 'A'
               t
             )()
@@ -652,21 +653,6 @@ describe 'index section', ()->
           _var_decl('prop', 'int')
           fnd('fn', type('function<void>'), [], [
             fa(_var('this', 'A'), 'prop', 'int')
-          ])
-        ])
-      ]).validate()
-    
-    it 'field access in method over this v2', ()->
-      _scope([
-        cls('A', [
-          _var_decl('prop', 'int')
-          fnd('fn', type('function<void>'), [], [
-            fa((
-              ()->
-                ret = new mod.This
-                ret.type = new Type 'A'
-                ret
-            )(), 'prop', 'int')
           ])
         ])
       ]).validate()
@@ -698,11 +684,6 @@ describe 'index section', ()->
           c('1', 'int')
         ]).validate()
       
-      it 'separate this', ()->
-        t = new mod.This
-        t.type = type 'int'
-        assert.throws ()-> t.validate()
-    
       it 'field access class wrong field', ()->
         assert.throws ()-> _scope([
           cls('A', [

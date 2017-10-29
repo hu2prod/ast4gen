@@ -52,7 +52,6 @@ class @Validation_context
   returnable: false
   type_hash : {}
   var_hash  : {}
-  this_type_name : null
   constructor:()->
     @type_hash = {}
     @var_hash  =
@@ -68,7 +67,6 @@ class @Validation_context
   mk_nest : (pass_breakable)->
     ret = new module.Validation_context
     ret.parent = @
-    ret.this_type_name = @this_type_name
     ret.returnable= @returnable
     ret.executable= @executable
     ret.breakable = @breakable if pass_breakable
@@ -97,14 +95,6 @@ class @Validation_context
 # TODO array init
 # TODO hash init
 # TODO interpolated string init
-class @This
-  type : null
-  validate : (ctx = new module.Validation_context)->
-    type_validate @type, ctx
-    if !ctx.this_type_name
-      throw new Error "This validation error. Can't find this_type_name"
-    return
-
 class @Const
   val  : ''
   type : null
@@ -200,7 +190,7 @@ class @Var
     
     var_decl = ctx.check_id(@name)
     if !var_decl
-      throw new Error "Var validation error. Id '#{id}' not defined"
+      throw new Error "Var validation error. Id '#{@name}' not defined"
     {type} = var_decl
     if !@type.cmp type
       throw new Error "Var validation error. Var type !+ Var_decl type '#{@type}' != #{type}"
@@ -737,7 +727,11 @@ class @Class_decl
       @_prepared_field2type[v.name] = v.type
     
     ctx_nest = ctx.mk_nest()
-    ctx_nest.this_type_name = @name
+    # wrapper
+    var_decl = new module.Var_decl
+    var_decl.name = 'this'
+    var_decl.type = new Type @name
+    ctx_nest.var_hash['this'] = var_decl
     @scope.validate(ctx_nest)
     return
 
