@@ -3,6 +3,26 @@ Type = require 'type'
 module = @
 
 void_type = new Type 'void'
+type_actualize = (t, root)->
+  t = t.clone()
+  walk = (_t)->
+    if reg_ret = /^_(\d+)$/.exec _t.main
+      [_skip, idx] = reg_ret
+      if !root.nest_list[idx]
+        # TODO make some test
+        ### !pragma coverage-skip-block ###
+        throw new Error "can't resolve #{_t} because root type '#{root}' cas no nest_list[#{idx}]"
+      return root.nest_list[idx].clone()
+    for v,k in _t.nest_list
+      _t.nest_list[k] = walk v
+    for k,v of _t.field_hash
+      # Прим. пока эта часть еще никем не используется
+      # TODO make some test
+      ### !pragma coverage-skip-block ###
+      _t.field_hash[k] = walk v
+    _t
+  walk t
+
 type_validate = (t, ctx)->
   if !t
     throw new Error "Type validation error. type is missing"
@@ -476,6 +496,8 @@ class @Field_access
       class_decl = ctx.check_type @t.type.main
       if !nest_type = class_decl._prepared_field2type[@name]
         throw new Error "Field_access validation error. Access to missing class field '#{@name}'. Possible keys [#{Object.keys(class_decl._prepared_field2type).join ', '}]"
+    
+    nest_type = type_actualize nest_type, @t.type
     
     if !@type.cmp nest_type
       throw new Error "Field_access validation error. Access to field '#{@name}' with type '#{nest_type}' but result '#{@type}'"
