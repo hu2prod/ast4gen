@@ -985,3 +985,11 @@ describe 'index section', ()->
           fa(_var('a', 'A'), 'wtf', 'int')
         ]).validate()
       
+  describe 'future compatibility', ()->
+    it 'array length_get', ()->
+      _scope([
+        _var_decl('a', 'array<int>')
+        fa(_var('a', 'array<int>'), 'length_get', 'function<int>')
+      ]).validate()
+    
+  

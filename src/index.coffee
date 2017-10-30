@@ -56,7 +56,21 @@ class @Validation_context
   type_hash : {}
   var_hash  : {}
   constructor:()->
-    @type_hash = {}
+    wrap = (_prepared_field2type)->
+      ret = new module.Class_decl
+      ret._prepared_field2type = _prepared_field2type
+      ret
+    @type_hash =
+      'array' : wrap
+        remove_idx : new Type 'function<void, int>'
+        length_get : new Type 'function<int>'
+        length_set : new Type 'function<void, int>'
+        pop        : new Type 'function<_0>'
+        push       : new Type 'function<void,_0>'
+        slice      : new Type 'function<array<_0>,int,int>' # + option
+        remove     : new Type 'function<void,_0>'
+        idx        : new Type 'function<int,_0>'
+        
     @var_hash  =
       true : new Type 'bool'
       false: new Type 'bool'
