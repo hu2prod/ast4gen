@@ -302,12 +302,19 @@ for v in "BOOL_AND BOOL_OR BOOL_XOR".split  /\s+/g
 @bin_op_ret_type_hash_list.ADD.push ['string', 'string', 'string']
 @bin_op_ret_type_hash_list.MUL.push ['string', 'int', 'string']
 # equal ops =, cmp
-for v in "ASSIGN EQ NE GT LT GTE LTE".split  /\s+/g
+for v in "ASSIGN".split  /\s+/g
   @bin_op_ret_type_hash_list[v] = [
     ['int', 'int', 'int']
     ['bool', 'bool', 'bool']
     ['float', 'float', 'float']
     ['string', 'string', 'string']
+  ]
+for v in "EQ NE GT LT GTE LTE".split  /\s+/g
+  @bin_op_ret_type_hash_list[v] = [
+    ['int', 'int', 'bool']
+    ['bool', 'bool', 'bool']
+    ['float', 'float', 'bool']
+    ['string', 'string', 'bool']
   ]
 str_list = """
 ADD
