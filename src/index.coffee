@@ -416,7 +416,7 @@ class @Bin_op
           else
             throw new Error "Bin_op validation error. #{@op} a=b=[#{@a.type}] must have return type '#{@a.type}'"
       
-      if @op in ['EQ', 'NE']
+      else if @op in ['EQ', 'NE']
         if @a.type.cmp @b.type
           if @type.main == 'bool'
             found = true
