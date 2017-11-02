@@ -3,7 +3,7 @@ Type = require 'type'
 module = @
 
 void_type = new Type 'void'
-type_actualize = (t, root)->
+@type_actualize = type_actualize = (t, root)->
   t = t.clone()
   walk = (_t)->
     if reg_ret = /^_(\d+)$/.exec _t.main
