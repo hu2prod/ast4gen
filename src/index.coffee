@@ -71,6 +71,10 @@ wrap = (_prepared_field2type)->
   ret = new module.Class_decl
   ret._prepared_field2type = _prepared_field2type
   ret
+@default_var_hash_gen = ()->
+  ret =
+    'true' : new Type 'bool'
+    'false': new Type 'bool'
 @default_type_hash_gen = ()->
   ret =
     'array' : wrap
@@ -91,9 +95,7 @@ class @Validation_context
   var_hash  : {}
   constructor:()->
     @type_hash = module.default_type_hash_gen()
-    @var_hash  =
-      true : new Type 'bool'
-      false: new Type 'bool'
+    @var_hash  = module.default_var_hash_gen()
   
   seek_non_executable_parent : ()->
     if @executable
