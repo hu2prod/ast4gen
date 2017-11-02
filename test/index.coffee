@@ -296,6 +296,20 @@ describe 'index section', ()->
     it 'a:int = 1', ()->
       bo(int, int, 'ASSIGN', type 'int').validate()
     
+    it 'a:array<int> = b:array<int>', ()->
+      _scope([
+        _var_decl('a', 'array<int>')
+        _var_decl('b', 'array<int>')
+        bo(_var('a', 'array<int>'), _var('b', 'array<int>'), 'ASSIGN', type 'array<int>')
+      ]).validate()
+    
+    it 'a:array<int> == b:array<int>', ()->
+      _scope([
+        _var_decl('a', 'array<int>')
+        _var_decl('b', 'array<int>')
+        bo(_var('a', 'array<int>'), _var('b', 'array<int>'), 'EQ', type 'bool')
+      ]).validate()
+    
     describe 'throws', ()->
       it 'missing a', ()->
         assert.throws ()-> bo(null, int, 'ADD', type 'int').validate()
@@ -311,6 +325,34 @@ describe 'index section', ()->
       
       it 'string+int', ()->
         assert.throws ()-> bo(string, int, 'ADD', type 'string').validate()
+    
+      it 'a:array<int> = b:int => not array<int>', ()->
+        assert.throws ()-> _scope([
+          _var_decl('a', 'array<int>')
+          _var_decl('b', 'int')
+          bo(_var('a', 'array<int>'), _var('b', 'int'), 'ASSIGN', type 'bool')
+        ]).validate()
+    
+      it 'a:array<int> = b:array<int> => not array<int>', ()->
+        assert.throws ()-> _scope([
+          _var_decl('a', 'array<int>')
+          _var_decl('b', 'array<int>')
+          bo(_var('a', 'array<int>'), _var('b', 'array<int>'), 'ASSIGN', type 'bool')
+        ]).validate()
+      
+      it 'a:array<int> == b:array<int> => not bool', ()->
+        assert.throws ()-> _scope([
+          _var_decl('a', 'array<int>')
+          _var_decl('b', 'int')
+          bo(_var('a', 'array<int>'), _var('b', 'int'), 'EQ', type 'bool')
+        ]).validate()
+      
+      it 'a:array<int> == b:array<int> => not bool', ()->
+        assert.throws ()-> _scope([
+          _var_decl('a', 'array<int>')
+          _var_decl('b', 'array<int>')
+          bo(_var('a', 'array<int>'), _var('b', 'array<int>'), 'EQ', type 'array<int>')
+        ]).validate()
   
   describe 'Bin_op', ()->
     uo = (a, op, _type)->

@@ -348,7 +348,6 @@ for v in "ASSIGN".split  /\s+/g
 for v in "EQ NE GT LT GTE LTE".split  /\s+/g
   @bin_op_ret_type_hash_list[v] = [
     ['int', 'int', 'bool']
-    ['bool', 'bool', 'bool']
     ['float', 'float', 'bool']
     ['string', 'string', 'bool']
   ]
@@ -407,6 +406,23 @@ class @Bin_op
       if v[2] != @type.toString()
         throw new Error "Bin_op validation error. bin_op=#{@op} with types #{@a.type} #{@b.type} should produce type #{v[2]} but #{@type} found"
       break
+    
+    # extra cases
+    if !found
+      if @op == 'ASSIGN'
+        if @a.type.cmp @b.type
+          if @a.type.cmp @type
+            found = true
+          else
+            throw new Error "Bin_op validation error. #{@op} a=b=[#{@a.type}] must have return type '#{@a.type}'"
+      
+      if @op in ['EQ', 'NE']
+        if @a.type.cmp @b.type
+          if @type.main == 'bool'
+            found = true
+          else
+            throw new Error "Bin_op validation error. #{@op} a=b=[#{@a.type}] must have return type bool"
+    
     if !found
       throw new Error "Bin_op validation error. Can't apply bin_op=#{@op} to #{@a.type} #{@b.type}"
     
