@@ -626,6 +626,14 @@ describe 'index section', ()->
         ])
       ]).validate()
     
+    it 'break', ()->
+      _scope([
+        _var_decl('i', 'int')
+        fr(_var('i', 'int'), c('1', 'int'), c('10', 'int'), null, [
+          new mod.Break
+        ])
+      ]).validate()
+    
     describe 'throws', ()->
       it 'string iterator', ()->
         assert.throws ()-> _scope([
@@ -772,6 +780,16 @@ describe 'index section', ()->
         _var_decl('v', 'int')
         fc(_var('k', 'string'), null, _var('t', 'hash<int>'), [
           c('0', 'int')
+        ])
+      ]).validate()
+    
+    it 'break', ()->
+      _scope([
+        _var_decl('t', 'array<string>')
+        _var_decl('k', 'int')
+        _var_decl('v', 'string')
+        fc(_var('k', 'int'), _var('v', 'string'), _var('t', 'array<string>'), [
+          new mod.Break
         ])
       ]).validate()
     

@@ -738,7 +738,9 @@ class @For_range
         unless @step.type.main == 'int'
           throw new Error "For_range validation error. Step should be type int because iterator is int but '#{@step.type}' found"
     
-    @scope.validate ctx
+    ctx_nest = ctx.mk_nest()
+    ctx_nest.breakable = true
+    @scope.validate ctx_nest
     return
 
 class @For_col
@@ -775,7 +777,9 @@ class @For_col
       unless @v.type.cmp @t.type.nest_list[0]
         throw new Error "For_col validation error. Value must be '#{@t.type.nest_list[0]}' but found '#{@v.type}'"
     
-    @scope.validate ctx
+    ctx_nest = ctx.mk_nest()
+    ctx_nest.breakable = true
+    @scope.validate ctx_nest
     return
 
 class @Ret
