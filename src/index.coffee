@@ -67,7 +67,21 @@ type_validate = (t, ctx)->
     type_validate v, ctx
   
   return
-
+wrap = (_prepared_field2type)->
+  ret = new module.Class_decl
+  ret._prepared_field2type = _prepared_field2type
+  ret
+@default_type_hash_gen = ()->
+  ret =
+    'array' : wrap
+      remove_idx : new Type 'function<void, int>'
+      length_get : new Type 'function<int>'
+      length_set : new Type 'function<void, int>'
+      pop        : new Type 'function<_0>'
+      push       : new Type 'function<void,_0>'
+      slice      : new Type 'function<array<_0>,int,int>' # + option
+      remove     : new Type 'function<void,_0>'
+      idx        : new Type 'function<int,_0>'
 class @Validation_context
   parent    : null
   executable: false
@@ -76,21 +90,7 @@ class @Validation_context
   type_hash : {}
   var_hash  : {}
   constructor:()->
-    wrap = (_prepared_field2type)->
-      ret = new module.Class_decl
-      ret._prepared_field2type = _prepared_field2type
-      ret
-    @type_hash =
-      'array' : wrap
-        remove_idx : new Type 'function<void, int>'
-        length_get : new Type 'function<int>'
-        length_set : new Type 'function<void, int>'
-        pop        : new Type 'function<_0>'
-        push       : new Type 'function<void,_0>'
-        slice      : new Type 'function<array<_0>,int,int>' # + option
-        remove     : new Type 'function<void,_0>'
-        idx        : new Type 'function<int,_0>'
-        
+    @type_hash = module.default_type_hash_gen()
     @var_hash  =
       true : new Type 'bool'
       false: new Type 'bool'
@@ -483,6 +483,7 @@ class @Field_access
   validate : (ctx = new module.Validation_context)->
     if !@t
       throw new Error "Field_access validation error. Missing target"
+    @t.validate(ctx)
     
     if !@name
       throw new Error "Field_access validation error. Missing name"
