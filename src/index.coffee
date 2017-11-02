@@ -647,6 +647,7 @@ class @Loop
           walk t.f
         when 'Break', 'Ret'
           found = true
+      return
     
     walk @scope
     if !found
