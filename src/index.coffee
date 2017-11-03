@@ -397,15 +397,15 @@ class @Bin_op
     if !module.allowed_bin_op_hash[@op]
       throw new Error "Bin_op validation error. Invalid op '#{@op}'"
     
-    list = module.bin_op_ret_type_hash_list[@op]
     found = false
-    for v in list
-      continue if v[0] != @a.type.toString()
-      continue if v[1] != @b.type.toString()
-      found = true
-      if v[2] != @type.toString()
-        throw new Error "Bin_op validation error. bin_op=#{@op} with types #{@a.type} #{@b.type} should produce type #{v[2]} but #{@type} found"
-      break
+    if list = module.bin_op_ret_type_hash_list[@op]
+      for v in list
+        continue if v[0] != @a.type.toString()
+        continue if v[1] != @b.type.toString()
+        found = true
+        if v[2] != @type.toString()
+          throw new Error "Bin_op validation error. bin_op=#{@op} with types #{@a.type} #{@b.type} should produce type #{v[2]} but #{@type} found"
+        break
     
     # extra cases
     if !found
@@ -422,6 +422,37 @@ class @Bin_op
             found = true
           else
             throw new Error "Bin_op validation error. #{@op} a=b=[#{@a.type}] must have return type bool"
+      else if @op == 'INDEX_ACCESS'
+        switch @a.type.main
+          when 'string'
+            if @b.type.main == 'int'
+              found = true
+            else
+              throw new Error "Bin_op validation error. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be int"
+            if @type.main == 'string'
+              found = true
+            else
+              throw new Error "Bin_op validation error. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be string"
+          when 'array'
+            if @b.type.main == 'int'
+              found = true
+            else
+              throw new Error "Bin_op validation error. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be int"
+            if @type.cmp @a.type.nest_list[0]
+              found = true
+            else
+              throw new Error "Bin_op validation error. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be #{@a.type.nest_list[0]} but #{@type} found"
+          when 'hash'
+            if @b.type.main == 'string'
+              found = true
+            else
+              throw new Error "Bin_op validation error. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be string"
+            if @type.cmp @a.type.nest_list[0]
+              found = true
+            else
+              throw new Error "Bin_op validation error. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be #{@a.type.nest_list[0]} but #{@type} found"
+          else
+            throw new Error "Bin_op validation error. Can't apply bin_op=#{@op} to #{@a.type} #{@b.type}"
     
     if !found
       throw new Error "Bin_op validation error. Can't apply bin_op=#{@op} to #{@a.type} #{@b.type}"
