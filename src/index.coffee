@@ -539,13 +539,18 @@ class @Field_access
     
     type_validate @type, ctx
     
-    if @t.type.main == 'struct'
+    if @name == 'new'
+      if @t.type.main in ['bool', 'int', 'float', 'string']
+        throw new Error "Field_access validation error. Access to missing field '#{@name}' in '#{@t.type}'."
+      nest_type = new Type 'function'
+      nest_type.nest_list[0] = @t.type
+    else if @t.type.main == 'struct'
       if !nest_type = @t.type.field_hash[@name]
-        throw new Error "Field_access validation error. Access to missing field '#{@name}'. Possible keys [#{Object.keys(@t.type.field_hash).join ', '}]"
+        throw new Error "Field_access validation error. Access to missing field '#{@name}' in '#{@t.type}'. Possible keys [#{Object.keys(@t.type.field_hash).join ', '}]"
     else
       class_decl = ctx.check_type @t.type.main
       if !nest_type = class_decl._prepared_field2type[@name]
-        throw new Error "Field_access validation error. Access to missing class field '#{@name}'. Possible keys [#{Object.keys(class_decl._prepared_field2type).join ', '}]"
+        throw new Error "Field_access validation error. Access to missing class field '#{@name}' in '#{@t.type}'. Possible keys [#{Object.keys(class_decl._prepared_field2type).join ', '}]"
     
     nest_type = type_actualize nest_type, @t.type
     

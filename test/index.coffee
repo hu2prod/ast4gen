@@ -1069,6 +1069,13 @@ describe 'index section', ()->
         ])
       ]).validate()
     
+    it 'new', ()->
+      _scope([
+        cls('A', [])
+        _var_decl('a' , 'A')
+        fa(_var('a', 'A'), 'new', 'function<A>')
+      ]).validate()
+    
     describe 'throws', ()->
       it 'no name', ()->
         assert.throws ()-> cls('', []).validate()
@@ -1105,7 +1112,7 @@ describe 'index section', ()->
           fa(_var('a', 'A'), 'wtf', 'int')
         ]).validate()
       
-  describe 'future compatibility', ()->
+  describe 'array api', ()->
     it 'array length_get', ()->
       _scope([
         _var_decl('a', 'array<int>')
@@ -1118,4 +1125,16 @@ describe 'index section', ()->
         fa(_var('a', 'array<int>'), 'pop', 'function<int>')
       ]).validate()
     
+    it 'array new', ()->
+      _scope([
+        _var_decl('a', 'array<int>')
+        fa(_var('a', 'array<int>'), 'new', 'function<array<int>>')
+      ]).validate()
+    
+  describe 'hash api', ()->
+    it 'array new', ()->
+      _scope([
+        _var_decl('a', 'hash<int>')
+        fa(_var('a', 'hash<int>'), 'new', 'function<hash<int>>')
+      ]).validate()
   
