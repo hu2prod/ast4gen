@@ -88,6 +88,11 @@ wrap = (_prepared_field2type)->
       idx        : new Type 'function<int,_0>'
       append     : new Type 'function<void,array<_0>>'
       clone      : new Type 'function<array<_0>>'
+      sort_i     : new Type 'function<void,function<int,_0,_0>>'
+      sort_f     : new Type 'function<void,function<float,_0,_0>>'
+      sort_by_i  : new Type 'function<void,function<int,_0>>'
+      sort_by_f  : new Type 'function<void,function<float,_0>>'
+      sort_by_s  : new Type 'function<void,function<string,_0>>'
 class @Validation_context
   parent    : null
   executable: false
