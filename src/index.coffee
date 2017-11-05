@@ -86,6 +86,8 @@ wrap = (_prepared_field2type)->
       slice      : new Type 'function<array<_0>,int,int>' # + option
       remove     : new Type 'function<void,_0>'
       idx        : new Type 'function<int,_0>'
+      append     : new Type 'function<void,array<_0>>'
+      clone      : new Type 'function<array<_0>>'
 class @Validation_context
   parent    : null
   executable: false

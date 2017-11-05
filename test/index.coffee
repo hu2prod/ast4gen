@@ -52,7 +52,6 @@ empty_scope = new mod.Scope
 
 describe 'index section', ()->
   describe 'constructor', ()->
-    
     for v in "Const Array_init Hash_init Struct_init Var Bin_op Un_op Field_access Fn_call Scope If Switch Loop Break Continue While For_range For_col Ret Try Throw Var_decl Class_decl Fn_decl".split /\s+/g
       do (v)->
         it v, ()-> new mod[v]
@@ -1086,6 +1085,12 @@ describe 'index section', ()->
             cls('A', [])
             cls('A', [])
           ]).validate()
+    
+      it 'new bool', ()->
+        assert.throws ()-> _scope([
+          _var_decl('a' , 'bool')
+          fa(_var('a', 'bool'), 'new', 'function<bool>')
+        ]).validate()
       
       # Потом
       # it 'wrong this type', ()->
