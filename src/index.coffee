@@ -667,7 +667,7 @@ class @Switch
     @cond.validate(ctx)
     
     if 0 == h_count @hash
-      throw new Error "Switch validation error. no"
+      throw new Error "Switch validation error. no when conditions found"
     switch @cond.type.main
       when 'int'
         for k,v of @hash
