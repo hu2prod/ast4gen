@@ -241,6 +241,20 @@ describe 'index section', ()->
       t.type = type 'int'
       
       scope.validate()
+    
+    it 'ok with scope no need_nest', ()->
+      scope = new mod.Scope
+      scope.need_nest = false
+      scope.list.push t = new mod.Var_decl
+      t.name = 'a'
+      t.type = type 'int'
+      
+      console.log "тут другая проблема, нельзя оставлять висячую переменную"
+      scope.list.push t = new mod.Var
+      t.name = 'a'
+      t.type = type 'int'
+      
+      scope.validate()
       
     describe 'throws', ()->
       it 'not declared', ()->

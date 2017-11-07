@@ -602,11 +602,15 @@ class @Fn_call
 # TODO var_decl check
 class @Scope
   list : []
+  need_nest : true
   constructor:()->
     @list = []
   
   validate : (ctx = new module.Validation_context)->
-    ctx_nest = ctx.mk_nest(true)
+    if @need_nest
+      ctx_nest = ctx.mk_nest(true)
+    else
+      ctx_nest = ctx
     
     for stmt in @list # for Class_decl
       stmt.register?(ctx_nest)
