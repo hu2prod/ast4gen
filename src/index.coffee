@@ -829,7 +829,7 @@ class @For_col
     @v?.validate ctx
     
     switch @t.type.main
-      when 'array'
+      when 'array', 'hash_int'
         if @k
           unless @k.type.main == 'int'
             throw new Error "For_col validation error. Key must be int for array<t> target but found '#{@k.type}'"
@@ -838,7 +838,7 @@ class @For_col
           unless @k.type.main == 'string'
             throw new Error "For_col validation error. Key must be string for hash<t> target but found '#{@k.type}'"
       else
-        throw new Error "For_col validation error. For_col accepts types array<t> and hash<t> but found '#{@t.type}'"
+        throw new Error "For_col validation error. For_col accepts types array<t>, hash<t> and hash_int<t> but found '#{@t.type}'"
       
     if @v
       unless @v.type.cmp @t.type.nest_list[0]
