@@ -34,7 +34,7 @@ type_validate = (t, ctx)->
         throw new Error "Type validation error. #{t.main} can't have nest_list"
       if 0 != h_count t.field_hash
         throw new Error "Type validation error. #{t.main} can't have field_hash"
-    when 'array'
+    when 'array', 'hash_int'
       if t.nest_list.length != 1
         throw new Error "Type validation error. #{t.main} must have nest_list 1"
       if 0 != h_count t.field_hash
@@ -93,6 +93,10 @@ wrap = (_prepared_field2type)->
       sort_by_i  : new Type 'function<void,function<int,_0>>'
       sort_by_f  : new Type 'function<void,function<float,_0>>'
       sort_by_s  : new Type 'function<void,function<string,_0>>'
+    'hash_int' : wrap
+      add        : new Type 'function<void,int,_0>'
+      remove_idx : new Type 'function<void,int>'
+      idx        : new Type 'function<_0,int>'
 class @Validation_context
   parent    : null
   executable: false

@@ -65,7 +65,7 @@ describe 'index section', ()->
         t.validate()
         return
       
-      for v in "int float string bool array<int> hash<int> struct{a:int} function<void> function<void,int>".split /\s+/g
+      for v in "int float string bool array<int> hash<int> hash_int<int> struct{a:int} function<void> function<void,int>".split /\s+/g
         do (v)->
           it v, ()-> test v
     
@@ -340,6 +340,12 @@ describe 'index section', ()->
         _var_decl('a', 'hash<int>')
         bo(_var('a', 'hash<int>'), c('1', 'string'), 'INDEX_ACCESS', type 'int')
       ]).validate()
+    
+    # it 'a:hash_int<string> a[1]', ()->
+      # _scope([
+        # _var_decl('a', 'hash_int<string>')
+        # bo(_var('a', 'hash_int<string>'), c('1', 'int'), 'INDEX_ACCESS', type 'string')
+      # ]).validate()
     
     describe 'throws', ()->
       it 'missing a', ()->
@@ -1132,28 +1138,42 @@ describe 'index section', ()->
         ]).validate()
       
   describe 'array api', ()->
-    it 'array length_get', ()->
+    it 'length_get', ()->
       _scope([
         _var_decl('a', 'array<int>')
         fa(_var('a', 'array<int>'), 'length_get', 'function<int>')
       ]).validate()
     
-    it 'array length_get', ()->
+    it 'length_get', ()->
       _scope([
         _var_decl('a', 'array<int>')
         fa(_var('a', 'array<int>'), 'pop', 'function<int>')
       ]).validate()
     
-    it 'array new', ()->
+    it 'new', ()->
       _scope([
         _var_decl('a', 'array<int>')
         fa(_var('a', 'array<int>'), 'new', 'function<array<int>>')
       ]).validate()
     
   describe 'hash api', ()->
-    it 'array new', ()->
+    it 'new', ()->
       _scope([
         _var_decl('a', 'hash<int>')
         fa(_var('a', 'hash<int>'), 'new', 'function<hash<int>>')
+      ]).validate()
+  
+    
+  describe 'hash_int api', ()->
+    it 'new', ()->
+      _scope([
+        _var_decl('a', 'hash_int<int>')
+        fa(_var('a', 'hash_int<int>'), 'new', 'function<hash_int<int>>')
+      ]).validate()
+    
+    it 'idx', ()->
+      _scope([
+        _var_decl('a', 'hash_int<string>')
+        fa(_var('a', 'hash_int<string>'), 'idx', 'function<string,int>')
       ]).validate()
   
