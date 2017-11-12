@@ -639,7 +639,7 @@ class @If
     @cond.validate(ctx)
     
     unless @cond.type.main in ['bool', 'int']
-      throw new Error "If validation error. cond must be bool or int but found '#{@cont.type}'"
+      throw new Error "If validation error. cond must be bool or int but found '#{@cond.type}'"
     
     @t.validate(ctx)
     @f.validate(ctx)
