@@ -752,10 +752,10 @@ class @While
     if !@cond
       throw new Error "While validation error. cond missing"
     
+    @cond.validate(ctx)
     unless @cond.type.main in ['bool', 'int']
       throw new Error "While validation error. cond must be bool or int"
     
-    @cond.validate(ctx)
     @scope.validate(ctx)
     
     if @scope.list.length == 0
