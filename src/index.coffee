@@ -756,7 +756,9 @@ class @While
     unless @cond.type.main in ['bool', 'int']
       throw new Error "While validation error. cond must be bool or int"
     
-    @scope.validate(ctx)
+    ctx_nest = ctx.mk_nest()
+    ctx_nest.breakable = true
+    @scope.validate(ctx_nest)
     
     if @scope.list.length == 0
       throw new Error "While validation error. Empty while is not allowed"

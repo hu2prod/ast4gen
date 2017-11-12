@@ -688,9 +688,13 @@ describe 'index section', ()->
       t.cond = cond
       t.scope.list = list
       t
+    brk = new mod.Break
     
     it 'ok', ()->
       lp(_true, [c('1', 'int')]).validate()
+    
+    it 'break', ()->
+      lp(_true, [brk]).validate()
     
     describe 'throws', ()->
       it 'empty', ()->
