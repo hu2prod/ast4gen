@@ -463,6 +463,15 @@ class @Bin_op
               found = true
             else
               throw new Error "Bin_op validation error. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be #{@a.type.nest_list[0]} but #{@type} found"
+          when 'hash_int'
+            if @b.type.main == 'int'
+              found = true
+            else
+              throw new Error "Bin_op validation error. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be int"
+            if @type.cmp @a.type.nest_list[0]
+              found = true
+            else
+              throw new Error "Bin_op validation error. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be #{@a.type.nest_list[0]} but #{@type} found"
           else
             throw new Error "Bin_op validation error. Can't apply bin_op=#{@op} to #{@a.type} #{@b.type}"
     

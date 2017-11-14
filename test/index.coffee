@@ -341,11 +341,11 @@ describe 'index section', ()->
         bo(_var('a', 'hash<int>'), c('1', 'string'), 'INDEX_ACCESS', type 'int')
       ]).validate()
     
-    # it 'a:hash_int<string> a[1]', ()->
-      # _scope([
-        # _var_decl('a', 'hash_int<string>')
-        # bo(_var('a', 'hash_int<string>'), c('1', 'int'), 'INDEX_ACCESS', type 'string')
-      # ]).validate()
+    it 'a:hash_int<string> a[1]', ()->
+      _scope([
+        _var_decl('a', 'hash_int<string>')
+        bo(_var('a', 'hash_int<string>'), c('1', 'int'), 'INDEX_ACCESS', type 'string')
+      ]).validate()
     
     describe 'throws', ()->
       it 'missing a', ()->
@@ -431,6 +431,18 @@ describe 'index section', ()->
         assert.throws ()-> _scope([
           _var_decl('a', 'int')
           bo(_var('a', 'int'), c('1', 'string'), 'INDEX_ACCESS', type 'string')
+        ]).validate()
+    
+      it 'a:hash_int<string> a[1] ret int', ()->
+        assert.throws ()-> _scope([
+          _var_decl('a', 'hash_int<string>')
+          bo(_var('a', 'hash_int<string>'), c('1', 'int'), 'INDEX_ACCESS', type 'int')
+        ]).validate()
+    
+      it 'a:hash_int<string> a["1"] ret string', ()->
+        assert.throws ()-> _scope([
+          _var_decl('a', 'hash_int<string>')
+          bo(_var('a', 'hash_int<string>'), c('1', 'string'), 'INDEX_ACCESS', type 'string')
         ]).validate()
   
   describe 'Bin_op', ()->
