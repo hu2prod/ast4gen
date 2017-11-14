@@ -447,6 +447,10 @@ describe 'index section', ()->
     it '-1.0', ()->
       uo(float, 'MINUS', type 'float').validate()
     
+    # плохо, но hu2prod
+    it '1?', ()->
+      uo(int, 'IS_NOT_NULL', type 'bool').validate()
+    
     describe 'throws', ()->
       it 'missing a', ()->
         assert.throws ()-> uo(null, 'MINUS', type 'int').validate()
@@ -459,6 +463,10 @@ describe 'index section', ()->
       
       it '-string', ()->
         assert.throws ()-> uo(string, 'MINUS', type 'int').validate()
+      
+      # плохо, но hu2prod
+      it '1? -> int?', ()->
+        assert.throws ()-> uo(int, 'IS_NOT_NULL', type 'int').validate()
   
   describe 'Fn_call', ()->
     fnc = (fn, list, _type, splat=false)->

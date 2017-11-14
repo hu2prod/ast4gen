@@ -479,6 +479,7 @@ class @Bin_op
   BIT_NOT : true
   MINUS   : true
   PLUS    : true # parseFloat
+  IS_NOT_NULL : true
   # new ?
   # delete ?
 
@@ -524,12 +525,17 @@ class @Un_op
     
     list = module.un_op_ret_type_hash_list[@op]
     found = false
-    for v in list
-      continue if v[0] != @a.type.toString()
+    if list
+      for v in list
+        continue if v[0] != @a.type.toString()
+        found = true
+        if v[1] != @type.toString()
+          throw new Error "Un_op validation error. un_op=#{@op} with type #{@a.type} should produce type #{v[1]} but #{@type} found"
+        break
+    if @op == 'IS_NOT_NULL'
+      if @type.main != 'bool'
+        throw new Error "Un_op validation error. un_op=#{@op} with type #{@a.type} should produce type bool but #{@type} found"
       found = true
-      if v[1] != @type.toString()
-        throw new Error "Un_op validation error. un_op=#{@op} with type #{@a.type} should produce type #{v[1]} but #{@type} found"
-      break
     if !found
       throw new Error "Un_op validation error. Can't apply un_op=#{@op} to #{@a.type}"
     
