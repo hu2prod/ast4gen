@@ -86,6 +86,7 @@ wrap = (_prepared_field2type)->
       slice      : new Type 'function<array<_0>,int,int>' # + option
       remove     : new Type 'function<void,_0>'
       idx        : new Type 'function<int,_0>'
+      has        : new Type 'function<bool,_0>'
       append     : new Type 'function<void,array<_0>>'
       clone      : new Type 'function<array<_0>>'
       sort_i     : new Type 'function<void,function<int,_0,_0>>'
