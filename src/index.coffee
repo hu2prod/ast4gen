@@ -159,7 +159,9 @@ class @Const
         if parseInt(@val).toString() != @val
           throw new Error "Const validation error. '#{@val}' can't be int"
       when 'float'
-        val = @val.replace(/\.?0+$/, '')
+        val = @val
+        val = val.replace(/\.0+$/, '')
+        val = val.replace(/e(\d)/i, 'e+$1')
         if parseFloat(val).toString() != val
           throw new Error "Const validation error. '#{@val}' can't be float"
       when 'string'
