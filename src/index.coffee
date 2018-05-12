@@ -47,8 +47,8 @@ type_validate = (t, ctx)->
     when 'struct'
       if t.nest_list.length != 0
         throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} must have nest_list 0"
-      if 0 == h_count t.field_hash
-        throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} must have field_hash"
+      # if 0 == h_count t.field_hash
+      #   throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} must have field_hash"
     when 'function'
       if t.nest_list.length == 0
         throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} must have at least nest_list 1 (ret type)"

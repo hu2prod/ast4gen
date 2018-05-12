@@ -84,7 +84,8 @@ describe 'index section', ()->
           assert.throws ()-> t.validate()
           return
         
-        for v in "wtf array<wtf> int<int> int{a:int} float<int> float{a:int} string<int> string{a:int} array array<int>{a:int} hash hash<int>{a:int} struct struct<int>{a:int} function<> function<void>{a:int}".split /\s+/g
+        # struct теперь валидный
+        for v in "wtf array<wtf> int<int> int{a:int} float<int> float{a:int} string<int> string{a:int} array array<int>{a:int} hash hash<int>{a:int} struct<int>{a:int} function<> function<void>{a:int}".split /\s+/g
           do (v)->
             it v, ()-> test v
   # ###################################################################################################
