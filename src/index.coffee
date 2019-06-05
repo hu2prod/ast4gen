@@ -935,12 +935,21 @@ class @Throw
 #    decl
 # ###################################################################################################
 class @Var_decl
-  name : ''
+  name  : ''
   type  : null
+  size  : null
+  assign_value      : null
+  assign_value_list : null
   validate : (ctx = new module.Validation_context)->
     type_validate @type, ctx
     if ctx.check_id_decl(@name)
       throw new Error "Var_decl validation error line=#{@line} pos=#{@pos}. Redeclare '#{@name}'"
+    
+    # TODO size check
+    # а еще с type связь скорее всего должна быть
+    
+    # TODO assign_value
+    # TODO assign_value_list
     
     ctx.var_hash[@name] = @
     return
