@@ -50,11 +50,15 @@ fa = (target, name, _type)->
 bomb = new mod.Const
 empty_scope = new mod.Scope
 
+validate_clone_test = (t)->
+  t.validate()
+  t.clone().validate()
+
 describe "index section", ()->
   describe "constructor", ()->
     for v in "Const Array_init Hash_init Struct_init Var Bin_op Un_op Field_access Fn_call Scope If Switch Loop Break Continue While For_range For_col Ret Try Throw Var_decl Class_decl Fn_decl".split /\s+/g
       do (v)->
-        it v, ()-> new mod[v]
+        it v, ()->new mod[v]
     
   describe "validate type", ()->
     do ()->
@@ -62,7 +66,7 @@ describe "index section", ()->
         t = new mod.Var_decl
         t.name = "a"
         t.type = type _t
-        t.validate()
+        validate_clone_test t
         return
       
       for v in "int float string bool array<int> hash<int> hash_int<int> struct{a:int} function<void> function<void,int>".split /\s+/g
@@ -94,47 +98,51 @@ describe "index section", ()->
   describe "Const", ()->
     describe "bool", ()->
       it "true", ()->
-        c("true", "bool").validate()
+        validate_clone_test c("true", "bool")
       it "false", ()->
-        c("true", "bool").validate()
-      it "wtf", ()->
-        assert.throws ()-> c("wtf", "bool").validate()
+        validate_clone_test c("true", "bool")
+      describe "throws", ()->
+        it "wtf", ()->
+          assert.throws ()-> c("wtf", "bool").validate()
     
     describe "string", ()->
       it "ok", ()->
-        c("any", "string").validate()
+        validate_clone_test c("any", "string")
     
     describe "int", ()->
       it "ok", ()->
-        c("1", "int").validate()
-      it "fail string", ()->
-        assert.throws ()-> c("a", "int").validate()
-      it "fail float", ()->
-        assert.throws ()-> c("1.1", "int").validate()
+        validate_clone_test c("1", "int")
+      describe "throws", ()->
+        it "fail string", ()->
+          assert.throws ()-> c("a", "int").validate()
+        it "fail float", ()->
+          assert.throws ()-> c("1.1", "int").validate()
     
     describe "float", ()->
       it "int", ()->
-        c("1", "float").validate()
+        validate_clone_test c("1", "float")
       it "float", ()->
-        c("1.0", "float").validate()
+        validate_clone_test c("1.0", "float")
       it "float", ()->
-        c("1.1", "float").validate()
+        validate_clone_test c("1.1", "float")
       # it "float", ()->
-      #   c("1e+10", "float").validate()
+      #   validate_clone_test c("1e+10", "float")
       # it "float", ()->
-      #   c("1e10", "float").validate()
+      #   validate_clone_test c("1e10", "float")
       it "float", ()->
-        c("1e+100", "float").validate()
+        validate_clone_test c("1e+100", "float")
       it "float", ()->
-        c("1e100", "float").validate()
-      it "fail string", ()->
-        assert.throws ()-> c("a", "float").validate()
+        validate_clone_test c("1e100", "float")
+      describe "throws", ()->
+        it "fail string", ()->
+          assert.throws ()-> c("a", "float").validate()
     
-    it "wtf", ()->
-      assert.throws ()-> c("any", "wtf").validate()
-    
-    it "array<int>", ()->
-      assert.throws ()-> c("any", "array<int>").validate()
+    describe "throws", ()->
+      it "wtf", ()->
+        assert.throws ()-> c("any", "wtf").validate()
+      
+      it "array<int>", ()->
+        assert.throws ()-> c("any", "array<int>").validate()
   
   int = new mod.Const
   int.val  = "1"
@@ -154,10 +162,10 @@ describe "index section", ()->
       t.list  = list
       t
     it "empty", ()->
-      a(type("array<int>"),[]).validate()
+      validate_clone_test a(type("array<int>"),[])
     
     it "1 int", ()->
-      a(type("array<int>"),[c("1", type("int"))]).validate()
+      validate_clone_test a(type("array<int>"),[c("1", type("int"))])
     
     describe "throws", ()->
       it "no type", ()->
@@ -176,10 +184,10 @@ describe "index section", ()->
       t.hash  = hash
       t
     it "empty", ()->
-      h(type("hash<int>"),{}).validate()
+      validate_clone_test h(type("hash<int>"),{})
     
     it "1 int", ()->
-      h(type("hash<int>"),{a:c("1", type("int"))}).validate()
+      validate_clone_test h(type("hash<int>"),{a:c("1", type("int"))})
     
     describe "throws", ()->
       it "no type", ()->
@@ -199,14 +207,14 @@ describe "index section", ()->
       t
     
     it "a:int", ()->
-      s(type("struct{a:int}"),{a:c("1", type("int"))}).validate()
+      validate_clone_test s(type("struct{a:int}"),{a:c("1", type("int"))})
     
     it "empty", ()->
-      s(type("struct{a:int}"),{}).validate()
+      validate_clone_test s(type("struct{a:int}"),{})
     
     it "field access struct", ()->
       t = s(type("struct{a:int}"),{})
-      fa(t, "a", "int").validate()
+      validate_clone_test fa(t, "a", "int")
     
     describe "throws", ()->
       it "no type", ()->
@@ -249,7 +257,7 @@ describe "index section", ()->
       t.name = "a"
       t.type = type "int"
       
-      scope.validate()
+      validate_clone_test scope
     
     it "ok with scope no need_nest", ()->
       scope = new mod.Scope
@@ -263,7 +271,7 @@ describe "index section", ()->
       t.name = "a"
       t.type = type "int"
       
-      scope.validate()
+      validate_clone_test scope
       
     describe "throws", ()->
       it "not declared", ()->
@@ -301,60 +309,60 @@ describe "index section", ()->
       t
     
     it "1+1", ()->
-      bo(int, int, "ADD", type "int").validate()
+      validate_clone_test bo(int, int, "ADD", type "int")
     
     it "1+1.0", ()->
-      bo(int, float, "ADD", type "float").validate()
+      validate_clone_test bo(int, float, "ADD", type "float")
     
     it "1.0+1", ()->
-      bo(float, int, "ADD", type "float").validate()
+      validate_clone_test bo(float, int, "ADD", type "float")
     
     it "1.0+1.0", ()->
-      bo(float, float, "ADD", type "float").validate()
+      validate_clone_test bo(float, float, "ADD", type "float")
     
     it '"1"+"1"', ()->
-      bo(string, string, "ADD", type "string").validate()
+      validate_clone_test bo(string, string, "ADD", type "string")
     
     it "a:int = 1", ()->
-      bo(int, int, "ASSIGN", type "int").validate()
+      validate_clone_test bo(int, int, "ASSIGN", type "int")
     
     it "a:array<int> = b:array<int>", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "array<int>")
         _var_decl("b", "array<int>")
         bo(_var("a", "array<int>"), _var("b", "array<int>"), "ASSIGN", type "array<int>")
-      ]).validate()
+      ])
     
     it "a:array<int> == b:array<int>", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "array<int>")
         _var_decl("b", "array<int>")
         bo(_var("a", "array<int>"), _var("b", "array<int>"), "EQ", type "bool")
-      ]).validate()
+      ])
     
     it "a:string a[1]", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "string")
         bo(_var("a", "string"), c("1", "int"), "INDEX_ACCESS", type "string")
-      ]).validate()
+      ])
     
     it "a:array<string> a[1]", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "array<string>")
         bo(_var("a", "array<string>"), c("1", "int"), "INDEX_ACCESS", type "string")
-      ]).validate()
+      ])
     
     it 'a:hash<int> a["1"]', ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "hash<int>")
         bo(_var("a", "hash<int>"), c("1", "string"), "INDEX_ACCESS", type "int")
-      ]).validate()
+      ])
     
     it "a:hash_int<string> a[1]", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "hash_int<string>")
         bo(_var("a", "hash_int<string>"), c("1", "int"), "INDEX_ACCESS", type "string")
-      ]).validate()
+      ])
     
     describe "throws", ()->
       it "missing a", ()->
@@ -463,14 +471,14 @@ describe "index section", ()->
       t
     
     it "-1", ()->
-      uo(int, "MINUS", type "int").validate()
+      validate_clone_test uo(int, "MINUS", type "int")
     
     it "-1.0", ()->
-      uo(float, "MINUS", type "float").validate()
+      validate_clone_test uo(float, "MINUS", type "float")
     
     # плохо, но hu2prod
     it "1?", ()->
-      uo(int, "IS_NOT_NULL", type "bool").validate()
+      validate_clone_test uo(int, "IS_NOT_NULL", type "bool")
     
     describe "throws", ()->
       it "missing a", ()->
@@ -511,24 +519,24 @@ describe "index section", ()->
     it "function<void>", ()->
       scope = new mod.Scope
       scope.list.push fnc(fn(scope, "function<void>"), [], type "void")
-      scope.validate()
+      validate_clone_test scope
     
     it "function<void,int>", ()->
       scope = new mod.Scope
       scope.list.push fnc(fn(scope, "function<void,int>"), [c("1","int")], type "void")
-      scope.validate()
+      validate_clone_test scope
     
     it "function<void> with decl", ()->
       scope = new mod.Scope
       scope.list.push fnd("fn", type("function<void>"), [], [])
       scope.list.push fnc(_var("fn", "function<void>"), [], type "void")
-      scope.validate()
+      validate_clone_test scope
     
     it "function<void,int> with decl", ()->
       scope = new mod.Scope
       scope.list.push fnd("fn", type("function<void,int>"), ["a"], [])
       scope.list.push fnc(_var("fn", "function<void,int>"), [c("1","int")], type "void")
-      scope.validate()
+      validate_clone_test scope
     
     describe "throws", ()->
       it "missing", ()->
@@ -575,15 +583,15 @@ describe "index section", ()->
   # ###################################################################################################
   describe "If", ()->
     it "basic", ()->
-      ifc(_true, [c("1", "int")], []).validate()
+      validate_clone_test ifc(_true, [c("1", "int")], [])
     
     it "basic with int cond", ()->
-      ifc(c("1", "int"), [c("1", "int")], []).validate()
+      validate_clone_test ifc(c("1", "int"), [c("1", "int")], [])
     
     it "with some body", ()->
-      ifc(_true, [
+      validate_clone_test ifc(_true, [
         empty_scope
-      ], []).validate()
+      ], [])
     
     describe "throws", ()->
       it "empty", ()->
@@ -610,10 +618,10 @@ describe "index section", ()->
       t
     
     it "int", ()->
-      sw(c("1", "int"), {1:empty_scope}, []).validate()
+      validate_clone_test sw(c("1", "int"), {1:empty_scope}, [])
     
     it "string", ()->
-      sw(c("1", "string"), {1:empty_scope}, []).validate()
+      validate_clone_test sw(c("1", "string"), {1:empty_scope}, [])
     
     describe "throws", ()->
       it "empty", ()->
@@ -649,19 +657,19 @@ describe "index section", ()->
     cn  = new mod.Continue
     
     it "break", ()->
-      lp([brk]).validate()
+      validate_clone_test lp([brk])
     
     it "break if pass test", ()->
-      lp([
+      validate_clone_test lp([
         ifc(_true, [brk], [])
-      ]).validate()
+      ])
     
     it "continue check", ()->
-      lp([brk, cn]).validate()
+      validate_clone_test lp([brk, cn])
     
     describe "Id pass", ()->
       it "ok", ()->
-        lp([
+        validate_clone_test lp([
           (()->
             t = new mod.Var_decl
             t.name = "a"
@@ -678,7 +686,7 @@ describe "index section", ()->
             brk
           ])
           brk
-        ]).validate()
+        ])
       describe "throws", ()->
         it "redeclare", ()->
           assert.throws ()-> lp([
@@ -720,10 +728,10 @@ describe "index section", ()->
     brk = new mod.Break
     
     it "ok", ()->
-      lp(_true, [c("1", "int")]).validate()
+      validate_clone_test lp(_true, [c("1", "int")])
     
     it "break", ()->
-      lp(_true, [brk]).validate()
+      validate_clone_test lp(_true, [brk])
     
     describe "throws", ()->
       it "empty", ()->
@@ -749,44 +757,44 @@ describe "index section", ()->
       t
     
     it "ok", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("i", "int")
         fr(_var("i", "int"), c("1", "int"), c("10", "int"), null, [
           c("0", "int")
         ])
-      ]).validate()
+      ])
     
     it "step", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("i", "int")
         fr(_var("i", "int"), c("1", "int"), c("10", "int"), c("2", "int"), [
           c("0", "int")
         ])
-      ]).validate()
+      ])
     
     it "float step", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("i", "float")
         fr(_var("i", "float"), c("1", "float"), c("10", "float"), c("2", "float"), [
           c("0", "int")
         ])
-      ]).validate()
+      ])
       
     it "float iterator int range int step", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("i", "float")
         fr(_var("i", "float"), c("1", "int"), c("10", "int"), c("2", "int"), [
           c("0", "int")
         ])
-      ]).validate()
+      ])
     
     it "break", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("i", "int")
         fr(_var("i", "int"), c("1", "int"), c("10", "int"), null, [
           new mod.Break
         ])
-      ]).validate()
+      ])
     
     describe "throws", ()->
       it "string iterator", ()->
@@ -878,74 +886,74 @@ describe "index section", ()->
       t
     
     it "ok", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("t", "array<string>")
         _var_decl("k", "int")
         _var_decl("v", "string")
         fc(_var("k", "int"), _var("v", "string"), _var("t", "array<string>"), [
           c("0", "int")
         ])
-      ]).validate()
+      ])
     
     it "no k", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("t", "array<string>")
         _var_decl("k", "int")
         _var_decl("v", "string")
         fc(null, _var("v", "string"), _var("t", "array<string>"), [
           c("0", "int")
         ])
-      ]).validate()
+      ])
     
     it "no v", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("t", "array<string>")
         _var_decl("k", "int")
         _var_decl("v", "string")
         fc(_var("k", "int"), null, _var("t", "array<string>"), [
           c("0", "int")
         ])
-      ]).validate()
+      ])
     
     it "ok hash", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("t", "hash<int>")
         _var_decl("k", "string")
         _var_decl("v", "int")
         fc(_var("k", "string"), _var("v", "int"), _var("t", "hash<int>"), [
           c("0", "int")
         ])
-      ]).validate()
+      ])
     
     it "no k hash", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("t", "hash<int>")
         _var_decl("k", "string")
         _var_decl("v", "int")
         fc(null, _var("v", "int"), _var("t", "hash<int>"), [
           c("0", "int")
         ])
-      ]).validate()
+      ])
     
     it "no v hash", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("t", "hash<int>")
         _var_decl("k", "string")
         _var_decl("v", "int")
         fc(_var("k", "string"), null, _var("t", "hash<int>"), [
           c("0", "int")
         ])
-      ]).validate()
+      ])
     
     it "break", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("t", "array<string>")
         _var_decl("k", "int")
         _var_decl("v", "string")
         fc(_var("k", "int"), _var("v", "string"), _var("t", "array<string>"), [
           new mod.Break
         ])
-      ]).validate()
+      ])
     
     describe "throws", ()->
       it "no target", ()->
@@ -967,7 +975,7 @@ describe "index section", ()->
             c("0", "int")
           ])
         ]).validate()
-    
+      
       it "not k and v", ()->
         assert.throws ()-> _scope([
           _var_decl("t", "array<string>")
@@ -977,7 +985,7 @@ describe "index section", ()->
             c("0", "int")
           ])
         ]).validate()
-    
+      
       it "wrong k type array", ()->
         assert.throws ()-> _scope([
           _var_decl("t", "array<string>")
@@ -987,7 +995,7 @@ describe "index section", ()->
             c("0", "int")
           ])
         ]).validate()
-    
+      
       it "wrong k type hash", ()->
         assert.throws ()-> _scope([
           _var_decl("t", "hash<int>")
@@ -997,7 +1005,7 @@ describe "index section", ()->
             c("0", "int")
           ])
         ]).validate()
-    
+      
       it "wrong v type", ()->
         assert.throws ()-> _scope([
           _var_decl("t", "array<string>")
@@ -1011,20 +1019,20 @@ describe "index section", ()->
   describe "Fn_decl", ()->
     ret = new mod.Ret
     it "empty", ()->
-      fnd("fn", type("function<void>"), [], []).validate()
+      validate_clone_test fnd("fn", type("function<void>"), [], [])
     
     it "1 param", ()->
-      fnd("fn", type("function<void,int>"), ["a"], []).validate()
+      validate_clone_test fnd("fn", type("function<void,int>"), ["a"], [])
     
     it "1 param return", ()->
-      fnd("fn", type("function<int,int>"), ["a"], [
+      validate_clone_test fnd("fn", type("function<int,int>"), ["a"], [
         _ret(_var("a", "int"))
-      ]).validate()
+      ])
     
     it "1 param + return", ()->
-      fnd("fn", type("function<void,int>"), ["a"], [
+      validate_clone_test fnd("fn", type("function<void,int>"), ["a"], [
         ret
-      ]).validate()
+      ])
     
     describe "throws", ()->
       it "return out of fn_decl scope not allowed", ()->
@@ -1062,20 +1070,20 @@ describe "index section", ()->
       t
     
     it "empty", ()->
-      cls("A", []).validate()
+      validate_clone_test cls("A", [])
     
     it "prop", ()->
-      cls("A", [
+      validate_clone_test cls("A", [
         _var_decl("prop", "int")
-      ]).validate()
+      ])
     
     it "fn", ()->
-      cls("A", [
+      validate_clone_test cls("A", [
         fnd("fn", type("function<void>"), [], [])
-      ]).validate()
+      ])
     
     it "fn this", ()->
-      _scope([
+      validate_clone_test _scope([
         cls("A", [
           fnd("fn", type("function<void>"), [], [
             (()->
@@ -1086,10 +1094,10 @@ describe "index section", ()->
             )()
           ])
         ])
-      ]).validate()
+      ])
     
     it "fn this", ()->
-      _scope([
+      validate_clone_test _scope([
         cls("A", [
           fnd("fn", type("function<void>"), [], [
             (()->
@@ -1100,33 +1108,33 @@ describe "index section", ()->
             )()
           ])
         ])
-      ]).validate()
+      ])
     
     it "field access class", ()->
-      _scope([
+      validate_clone_test _scope([
         cls("A", [
           _var_decl("prop", "int")
         ])
         _var_decl("a", "A")
         fa(_var("a", "A"), "prop", "int")
-      ]).validate()
+      ])
     
     it "field access in method over this", ()->
-      _scope([
+      validate_clone_test _scope([
         cls("A", [
           _var_decl("prop", "int")
           fnd("fn", type("function<void>"), [], [
             fa(_var("this", "A"), "prop", "int")
           ])
         ])
-      ]).validate()
+      ])
     
     it "new", ()->
-      _scope([
+      validate_clone_test _scope([
         cls("A", [])
         _var_decl("a" , "A")
         fa(_var("a", "A"), "new", "function<A>")
-      ]).validate()
+      ])
     
     describe "throws", ()->
       it "no name", ()->
@@ -1172,41 +1180,41 @@ describe "index section", ()->
       
   describe "array api", ()->
     it "length_get", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "array<int>")
         fa(_var("a", "array<int>"), "length_get", "function<int>")
-      ]).validate()
+      ])
     
     it "length_get", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "array<int>")
         fa(_var("a", "array<int>"), "pop", "function<int>")
-      ]).validate()
+      ])
     
     it "new", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "array<int>")
         fa(_var("a", "array<int>"), "new", "function<array<int>>")
-      ]).validate()
+      ])
     
   describe "hash api", ()->
     it "new", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "hash<int>")
         fa(_var("a", "hash<int>"), "new", "function<hash<int>>")
-      ]).validate()
+      ])
   
     
   describe "hash_int api", ()->
     it "new", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "hash_int<int>")
         fa(_var("a", "hash_int<int>"), "new", "function<hash_int<int>>")
-      ]).validate()
+      ])
     
     it "idx", ()->
-      _scope([
+      validate_clone_test _scope([
         _var_decl("a", "hash_int<string>")
         fa(_var("a", "hash_int<string>"), "idx", "function<string,int>")
-      ]).validate()
+      ])
   

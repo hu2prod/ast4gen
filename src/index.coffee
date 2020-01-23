@@ -190,6 +190,14 @@ class @Const
         throw new Error "can't implement constant type '#{@type}'"
     
     return
+  
+  clone : ()->
+    ret = new module.Const
+    ret.val   = @val
+    ret.type  = @type.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @Array_init
   list  : []
@@ -212,6 +220,15 @@ class @Array_init
         throw new Error "Array_init validation error line=#{@line} pos=#{@pos}. key '#{k}' must be type '#{cmp_type}' but '#{v.type}' found"
     
     return
+  
+  clone : ()->
+    ret = new module.Array_init
+    for v in @list
+      ret.list.push v.clone()
+    ret.type  = @type.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @Hash_init
   hash  : {}
@@ -235,6 +252,15 @@ class @Hash_init
         throw new Error "Hash_init validation error line=#{@line} pos=#{@pos}. key '#{k}' must be type '#{cmp_type}' but '#{v.type}' found"
   
     return
+  
+  clone : ()->
+    ret = new module.Hash_init
+    for k,v of @hash
+      ret.hash[k] = v.clone()
+    ret.type  = @type.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @Struct_init
   hash  : {}
@@ -255,10 +281,21 @@ class @Struct_init
         throw new Error "Struct_init validation error line=#{@line} pos=#{@pos}. key '#{k}' must be type '#{cmp_type}' but '#{v.type}' found"
     
     return
+  
+  clone : ()->
+    ret = new module.Struct_init
+    for k,v of @hash
+      ret.hash[k] = v.clone()
+    ret.type  = @type.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @Var
   name : ""
   type  : null
+  line  : 0
+  pos   : 0
   validate : (ctx = new module.Validation_context)->
     if !/^[_a-z][_a-z0-9]*$/i.test @name
       throw new Error "Var validation error line=#{@line} pos=#{@pos}. invalid identifier '#{@name}'"
@@ -271,6 +308,14 @@ class @Var
     if !@type.cmp type
       throw new Error "Var validation error line=#{@line} pos=#{@pos}. Var type !+ Var_decl type '#{@type}' != #{type}"
     return
+  
+  clone : ()->
+    ret = new module.Var
+    ret.name  = @name
+    ret.type  = @type.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 @allowed_bin_op_hash =
   ADD : true
@@ -417,10 +462,12 @@ for v in str_list.split  /\s+/g
 
 
 class @Bin_op
-  a : null
-  b : null
-  op: null
+  a     : null
+  b     : null
+  op    : null
   type  : null
+  line  : 0
+  pos   : 0
   validate : (ctx = new module.Validation_context)->
     if !@a
       throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. a missing"
@@ -508,6 +555,16 @@ class @Bin_op
       throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. Can't apply bin_op=#{@op} to #{@a.type} #{@b.type}"
     
     return
+  
+  clone : ()->
+    ret = new module.Bin_op
+    ret.a     = @a.clone()
+    ret.b     = @b.clone()
+    ret.op    = @op
+    ret.type  = @type.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 @allowed_un_op_hash =
   INC_RET : true
@@ -549,9 +606,11 @@ class @Bin_op
     ["string", "float"]
   ]
 class @Un_op
-  a   : null
-  op  : null
-  type: null
+  a     : null
+  op    : null
+  type  : null
+  line  : 0
+  pos   : 0
   validate : (ctx = new module.Validation_context)->
     if !@a
       throw new Error "Un_op validation error line=#{@line} pos=#{@pos}. a missing"
@@ -579,11 +638,22 @@ class @Un_op
       throw new Error "Un_op validation error line=#{@line} pos=#{@pos}. Can't apply un_op=#{@op} to #{@a.type}"
     
     return
+  
+  clone : ()->
+    ret = new module.Un_op
+    ret.a     = @a.clone()
+    ret.op    = @op
+    ret.type  = @type.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @Field_access
-  t : null
-  name : ""
+  t     : null
+  name  : ""
   type  : null
+  line  : 0
+  pos   : 0
   
   validate : (ctx = new module.Validation_context)->
     if !@t
@@ -614,6 +684,15 @@ class @Field_access
       throw new Error "Field_access validation error line=#{@line} pos=#{@pos}. Access to field '#{@name}' with type '#{nest_type}' but result '#{@type}'"
     
     return
+  
+  clone : ()->
+    ret = new module.Field_access
+    ret.t     = @t.clone()
+    ret.name  = @name
+    ret.type  = @type.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @Fn_call
   fn        : null
@@ -646,6 +725,16 @@ class @Fn_call
       if !@fn.type.nest_list[k+1].cmp arg.type
         throw new Error "Fn_call validation error line=#{@line} pos=#{@pos}. arg[#{k}] type mismatch. Expected=#{@fn.type.nest_list[k+1]} found=#{arg.type}"
     return
+  
+  clone : ()->
+    ret = new module.Fn_call
+    ret.fn    = @fn.clone()
+    ret.arg_list  = @arg_list.clone()
+    ret.splat_fin = @splat_fin
+    ret.type  = @type.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 # ###################################################################################################
 #    stmt
@@ -672,6 +761,15 @@ class @Scope
       stmt.validate(ctx_nest)
       # на самом деле валидными есть только Fn_call и assign, но мы об этом умолчим
     return
+  
+  clone : ()->
+    ret = new module.Scope
+    for v in @list
+      ret.list.push v.clone()
+    ret.need_nest = @need_nest
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @If
   cond: null
@@ -701,6 +799,15 @@ class @If
     if @t.list.length == 0 and @f.list.length == 0
       throw new Error "If validation error line=#{@line} pos=#{@pos}. Empty true and false sections"
     return
+  
+  clone : ()->
+    ret = new module.If
+    ret.cond  = @cond.clone()
+    ret.t     = @t.clone()
+    ret.f     = @f.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 # есть следующие валидные случаи компилирования switch
 # 1. cont типа int. Тогда все hash key трактуются как int. (Но нельзя NaN и Infinity)
@@ -749,6 +856,16 @@ class @Switch
     
     return
   
+  clone : ()->
+    ret = new module.Switch
+    ret.cond  = @cond.clone()
+    for k,v of @hash
+      ret.hash[k] = v.clone()
+    ret.f     = @f.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
+  
 class @Loop
   scope : null
   line  : 0
@@ -785,6 +902,13 @@ class @Loop
       # throw new Error "Loop validation error line=#{@line} pos=#{@pos}. Loop while is not allowed"
     return
   
+  clone : ()->
+    ret = new module.Loop
+    ret.scope = @scope.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
+  
 class @Break
   line  : 0
   pos   : 0
@@ -795,6 +919,12 @@ class @Break
       throw new Error "Break validation error line=#{@line} pos=#{@pos}. You can't use break outside loop, while"
     
     return
+  
+  clone : ()->
+    ret = new module.Break
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @Continue
   line  : 0
@@ -806,6 +936,12 @@ class @Continue
       throw new Error "Continue validation error line=#{@line} pos=#{@pos}. You can't use continue outside loop, while"
     
     return
+  
+  clone : ()->
+    ret = new module.Continue
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @While
   cond  : null
@@ -830,6 +966,14 @@ class @While
     if @scope.list.length == 0
       throw new Error "While validation error line=#{@line} pos=#{@pos}. Empty while is not allowed"
     return
+  
+  clone : ()->
+    ret = new module.While
+    ret.cond  = @cond.clone()
+    ret.scope = @scope.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @For_range
   exclusive : true
@@ -880,6 +1024,18 @@ class @For_range
     ctx_nest.breakable = true
     @scope.validate ctx_nest
     return
+  
+  clone : ()->
+    ret = new module.For_range
+    ret.exclusive = @exclusive
+    ret.i     = @i.clone()
+    ret.a     = @a.clone()
+    ret.b     = @b.clone()
+    ret.step  = @step.clone() if @step
+    ret.scope = @scope.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @For_col
   k : null
@@ -923,9 +1079,21 @@ class @For_col
     ctx_nest.breakable = true
     @scope.validate ctx_nest
     return
+  
+  clone : ()->
+    ret = new module.For_col
+    ret.t     = @t.clone()
+    ret.v     = @v.clone() if @v
+    ret.k     = @k.clone() if @k
+    ret.scope = @scope.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @Ret
   t : null
+  line  : 0
+  pos   : 0
   validate : (ctx = new module.Validation_context)->
     @t?.validate(ctx)
     if !ctx.returnable
@@ -941,6 +1109,13 @@ class @Ret
     
     
     return
+  
+  clone : ()->
+    ret = new module.Ret
+    ret.t     = @t.clone() if @t
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 # ###################################################################################################
 #    Exceptions
 # ###################################################################################################
@@ -954,8 +1129,30 @@ class @Try
     @t = new module.Scope
     @c = new module.Scope
   
+  # TODO validate
+  
+  clone : ()->
+    ret = new module.Try
+    ret.t     = @t.clone()
+    ret.c     = @c.clone()
+    ret.exception_var_name  = @exception_var_name
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
+  
 class @Throw
-  t : null
+  t     : null
+  line  : 0
+  pos   : 0
+  # TODO validate
+  
+  clone : ()->
+    ret = new module.Throw
+    ret.t     = @t.clone() if @t
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
+  
 # ###################################################################################################
 #    decl
 # ###################################################################################################
@@ -965,6 +1162,9 @@ class @Var_decl
   size  : null
   assign_value      : null
   assign_value_list : null
+  line  : 0
+  pos   : 0
+  
   validate : (ctx = new module.Validation_context)->
     type_validate @type, ctx
     if ctx.check_id_decl(@name)
@@ -978,6 +1178,20 @@ class @Var_decl
     
     ctx.var_hash[@name] = @
     return
+  
+  clone : ()->
+    ret = new module.Var_decl
+    ret.name  = @name
+    ret.type  = @type.clone()
+    ret.size  = @size
+    ret.assign_value  = @assign_value.clone() if @assign_value
+    if @assign_value_list
+      ret.assign_value_list = []
+      for v in @assign_value_list
+        ret.assign_value_list.push v.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @Class_decl
   name  : ""
@@ -1013,6 +1227,17 @@ class @Class_decl
     ctx_nest.var_hash["this"] = var_decl
     @scope.validate(ctx_nest)
     return
+  
+  clone : ()->
+    ret = new module.Class_decl
+    ret.name  = @name
+    ret.scope = @scope.clone()
+    for k,v of @_prepared_field2type
+      ret._prepared_field2type[k] = v.clone()
+    
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
 
 class @Fn_decl
   is_closure : false
@@ -1058,4 +1283,15 @@ class @Fn_decl
     var_decl.type = @type
     ctx.var_hash[@name] = var_decl
     return
+  
+  clone : ()->
+    ret = new module.Fn_decl
+    ret.is_closure  = @is_closure
+    ret.name  = @name
+    ret.type  = @type.clone()
+    ret.arg_name_list = @arg_name_list.clone()
+    ret.scope = @scope.clone()
+    ret.line  = @line
+    ret.pos   = @pos
+    ret
   
