@@ -194,7 +194,7 @@ class @Const
   clone : ()->
     ret = new module.Const
     ret.val   = @val
-    ret.type  = @type.clone()
+    ret.type  = @type.clone() if @type
     ret.line  = @line
     ret.pos   = @pos
     ret
@@ -225,7 +225,7 @@ class @Array_init
     ret = new module.Array_init
     for v in @list
       ret.list.push v.clone()
-    ret.type  = @type.clone()
+    ret.type  = @type.clone() if @type
     ret.line  = @line
     ret.pos   = @pos
     ret
@@ -257,7 +257,7 @@ class @Hash_init
     ret = new module.Hash_init
     for k,v of @hash
       ret.hash[k] = v.clone()
-    ret.type  = @type.clone()
+    ret.type  = @type.clone() if @type
     ret.line  = @line
     ret.pos   = @pos
     ret
@@ -286,7 +286,7 @@ class @Struct_init
     ret = new module.Struct_init
     for k,v of @hash
       ret.hash[k] = v.clone()
-    ret.type  = @type.clone()
+    ret.type  = @type.clone() if @type
     ret.line  = @line
     ret.pos   = @pos
     ret
@@ -312,7 +312,7 @@ class @Var
   clone : ()->
     ret = new module.Var
     ret.name  = @name
-    ret.type  = @type.clone()
+    ret.type  = @type.clone() if @type
     ret.line  = @line
     ret.pos   = @pos
     ret
@@ -561,7 +561,7 @@ class @Bin_op
     ret.a     = @a.clone()
     ret.b     = @b.clone()
     ret.op    = @op
-    ret.type  = @type.clone()
+    ret.type  = @type.clone() if @type
     ret.line  = @line
     ret.pos   = @pos
     ret
@@ -643,7 +643,7 @@ class @Un_op
     ret = new module.Un_op
     ret.a     = @a.clone()
     ret.op    = @op
-    ret.type  = @type.clone()
+    ret.type  = @type.clone() if @type
     ret.line  = @line
     ret.pos   = @pos
     ret
@@ -689,7 +689,7 @@ class @Field_access
     ret = new module.Field_access
     ret.t     = @t.clone()
     ret.name  = @name
-    ret.type  = @type.clone()
+    ret.type  = @type.clone() if @type
     ret.line  = @line
     ret.pos   = @pos
     ret
@@ -731,7 +731,7 @@ class @Fn_call
     ret.fn    = @fn.clone()
     ret.arg_list  = @arg_list.clone()
     ret.splat_fin = @splat_fin
-    ret.type  = @type.clone()
+    ret.type  = @type.clone() if @type
     ret.line  = @line
     ret.pos   = @pos
     ret
@@ -1182,7 +1182,7 @@ class @Var_decl
   clone : ()->
     ret = new module.Var_decl
     ret.name  = @name
-    ret.type  = @type.clone()
+    ret.type  = @type.clone() if @type
     ret.size  = @size
     ret.assign_value  = @assign_value.clone() if @assign_value
     if @assign_value_list
@@ -1288,7 +1288,7 @@ class @Fn_decl
     ret = new module.Fn_decl
     ret.is_closure  = @is_closure
     ret.name  = @name
-    ret.type  = @type.clone()
+    ret.type  = @type.clone() if @type
     ret.arg_name_list = @arg_name_list.clone()
     ret.scope = @scope.clone()
     ret.line  = @line
