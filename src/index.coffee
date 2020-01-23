@@ -1,8 +1,8 @@
-require 'fy'
-Type = require 'type'
+require "fy"
+Type = require "type"
 module = @
 
-void_type = new Type 'void'
+void_type = new Type "void"
 @type_actualize = type_actualize = (t, root)->
   t = t.clone()
   walk = (_t)->
@@ -29,75 +29,85 @@ type_validate = (t, ctx)->
   # if !ctx # JUST for debug
     # throw new Error "WTF"
   switch t.main
-    when 'void', 'int', 'float', 'string', 'bool'
+    when "void", "int", "float", "string", "bool"
       if t.nest_list.length != 0
         throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} can't have nest_list"
       if 0 != h_count t.field_hash
         throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} can't have field_hash"
-    when 'array', 'hash_int'
+    
+    when "array", "hash_int"
       if t.nest_list.length != 1
         throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} must have nest_list 1"
       if 0 != h_count t.field_hash
         throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} can't have field_hash"
-    when 'hash'
+    
+    when "hash"
       if t.nest_list.length != 1
         throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} must have nest_list 1"
       if 0 != h_count t.field_hash
         throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} can't have field_hash"
-    when 'struct'
+    
+    when "struct"
       if t.nest_list.length != 0
         throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} must have nest_list 0"
       # if 0 == h_count t.field_hash
       #   throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} must have field_hash"
-    when 'function'
+    
+    when "function"
       if t.nest_list.length == 0
         throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} must have at least nest_list 1 (ret type)"
       if 0 != h_count t.field_hash
         throw new Error "Type validation error line=#{@line} pos=#{@pos}. #{t.main} can't have field_hash"
-      ''
+      ""
       # TODO defined types ...
+    
     else
       if !ctx.check_type t.main
         throw new Error "unknown type '#{t}'"
   for v,k in t.nest_list
-    # continue if k == 0 and t.main == 'function' and v.main == 'void' # it's ok
+    # continue if k == 0 and t.main == "function" and v.main == "void" # it's ok
     type_validate v, ctx
   
   for k,v of t.field_hash
     type_validate v, ctx
   
   return
+
 wrap = (_prepared_field2type)->
   ret = new module.Class_decl
   ret._prepared_field2type = _prepared_field2type
   ret
+
 @default_var_hash_gen = ()->
   ret =
-    'true' : new Type 'bool'
-    'false': new Type 'bool'
+    "true" : new Type "bool"
+    "false": new Type "bool"
+
 @default_type_hash_gen = ()->
   ret =
-    'array' : wrap
-      remove_idx : new Type 'function<void, int>'
-      length_get : new Type 'function<int>'
-      length_set : new Type 'function<void, int>'
-      pop        : new Type 'function<_0>'
-      push       : new Type 'function<void,_0>'
-      slice      : new Type 'function<array<_0>,int,int>' # + option
-      remove     : new Type 'function<void,_0>'
-      idx        : new Type 'function<int,_0>'
-      has        : new Type 'function<bool,_0>'
-      append     : new Type 'function<void,array<_0>>'
-      clone      : new Type 'function<array<_0>>'
-      sort_i     : new Type 'function<void,function<int,_0,_0>>'
-      sort_f     : new Type 'function<void,function<float,_0,_0>>'
-      sort_by_i  : new Type 'function<void,function<int,_0>>'
-      sort_by_f  : new Type 'function<void,function<float,_0>>'
-      sort_by_s  : new Type 'function<void,function<string,_0>>'
-    'hash_int' : wrap
-      add        : new Type 'function<void,int,_0>'
-      remove_idx : new Type 'function<void,int>'
-      idx        : new Type 'function<_0,int>'
+    "array" : wrap
+      remove_idx : new Type "function<void, int>"
+      length_get : new Type "function<int>"
+      length_set : new Type "function<void, int>"
+      pop        : new Type "function<_0>"
+      push       : new Type "function<void,_0>"
+      slice      : new Type "function<array<_0>,int,int>" # + option
+      remove     : new Type "function<void,_0>"
+      idx        : new Type "function<int,_0>"
+      has        : new Type "function<bool,_0>"
+      append     : new Type "function<void,array<_0>>"
+      clone      : new Type "function<array<_0>>"
+      sort_i     : new Type "function<void,function<int,_0,_0>>"
+      sort_f     : new Type "function<void,function<float,_0,_0>>"
+      sort_by_i  : new Type "function<void,function<int,_0>>"
+      sort_by_f  : new Type "function<void,function<float,_0>>"
+      sort_by_s  : new Type "function<void,function<string,_0>>"
+    
+    "hash_int" : wrap
+      add        : new Type "function<void,int,_0>"
+      remove_idx : new Type "function<void,int>"
+      idx        : new Type "function<_0,int>"
+
 class @Validation_context
   parent    : null
   executable: false
@@ -149,29 +159,32 @@ class @Validation_context
 # TODO hash init
 # TODO interpolated string init
 class @Const
-  val   : ''
+  val   : ""
   type  : null
   line  : 0
   pos   : 0
   validate : (ctx = new module.Validation_context)->
     type_validate @type, ctx
     switch @type.main
-      when 'bool'
-        unless @val in ['true', 'false']
+      when "bool"
+        unless @val in ["true", "false"]
           throw new Error "Const validation error line=#{@line} pos=#{@pos}. '#{@val}' can't be bool"
-      when 'int'
+      
+      when "int"
         if parseInt(@val).toString() != @val
           throw new Error "Const validation error line=#{@line} pos=#{@pos}. '#{@val}' can't be int"
-      when 'float'
+      
+      when "float"
         val = @val
-        val = val.replace(/\.0+$/, '')
-        val = val.replace(/e(\d)/i, 'e+$1')
+        val = val.replace(/\.0+$/, "")
+        val = val.replace(/e(\d)/i, "e+$1")
         if parseFloat(val).toString() != val
           throw new Error "Const validation error line=#{@line} pos=#{@pos}. '#{@val}' can't be float"
-      when 'string'
-        'nothing'
+      
+      when "string"
+        "nothing"
         # string will be quoted and escaped
-      # when 'char'
+      # when "char"
       
       else
         throw new Error "can't implement constant type '#{@type}'"
@@ -188,7 +201,7 @@ class @Array_init
   
   validate : (ctx = new module.Validation_context)->
     type_validate @type, ctx
-    if @type.main != 'array'
+    if @type.main != "array"
       throw new Error "Array_init validation error line=#{@line} pos=#{@pos}. type must be array but '#{@type}' found"
     
     cmp_type = @type.nest_list[0]
@@ -210,7 +223,7 @@ class @Hash_init
   
   validate : (ctx = new module.Validation_context)->
     type_validate @type, ctx
-    if @type.main != 'hash'
+    if @type.main != "hash"
       throw new Error "Hash_init validation error line=#{@line} pos=#{@pos}. type must be hash but '#{@type}' found"
     
     for k,v of @hash
@@ -233,7 +246,7 @@ class @Struct_init
   
   validate : (ctx = new module.Validation_context)->
     type_validate @type, ctx
-    if @type.main != 'struct'
+    if @type.main != "struct"
       throw new Error "Struct_init validation error line=#{@line} pos=#{@pos}. type must be struct but '#{@type}' found"
       
     for k,v of @hash
@@ -244,7 +257,7 @@ class @Struct_init
     return
 
 class @Var
-  name : ''
+  name : ""
   type  : null
   validate : (ctx = new module.Validation_context)->
     if !/^[_a-z][_a-z0-9]*$/i.test @name
@@ -333,47 +346,47 @@ class @Var
 
 @bin_op_ret_type_hash_list =
   DIV : [
-    ['int', 'int', 'float']
-    ['int', 'float', 'float']
-    ['float', 'int', 'float']
-    ['float', 'float', 'float']
+    ["int", "int", "float"]
+    ["int", "float", "float"]
+    ["float", "int", "float"]
+    ["float", "float", "float"]
   ]
   DIV_INT : [
-    ['int', 'int', 'int']
-    ['int', 'float', 'int']
-    ['float', 'int', 'int']
-    ['float', 'float', 'int']
+    ["int", "int", "int"]
+    ["int", "float", "int"]
+    ["float", "int", "int"]
+    ["float", "float", "int"]
   ]
 # mix int float -> higher
 for v in "ADD SUB MUL POW".split  /\s+/g
   @bin_op_ret_type_hash_list[v] = [
-    ['int', 'int', 'int']
-    ['int', 'float', 'float']
-    ['float', 'int', 'float']
-    ['float', 'float', 'float']
+    ["int", "int", "int"]
+    ["int", "float", "float"]
+    ["float", "int", "float"]
+    ["float", "float", "float"]
   ]
 # pure int
 for v in "MOD BIT_AND BIT_OR BIT_XOR SHR SHL LSR".split  /\s+/g
-  @bin_op_ret_type_hash_list[v] = [['int', 'int', 'int']]
+  @bin_op_ret_type_hash_list[v] = [["int", "int", "int"]]
 # pure bool
 for v in "BOOL_AND BOOL_OR BOOL_XOR".split  /\s+/g
-  @bin_op_ret_type_hash_list[v] = [['bool', 'bool', 'bool']]
+  @bin_op_ret_type_hash_list[v] = [["bool", "bool", "bool"]]
 # special string magic
-@bin_op_ret_type_hash_list.ADD.push ['string', 'string', 'string']
-@bin_op_ret_type_hash_list.MUL.push ['string', 'int', 'string']
+@bin_op_ret_type_hash_list.ADD.push ["string", "string", "string"]
+@bin_op_ret_type_hash_list.MUL.push ["string", "int", "string"]
 # equal ops =, cmp
 for v in "ASSIGN".split  /\s+/g
   @bin_op_ret_type_hash_list[v] = [
-    ['int', 'int', 'int']
-    ['bool', 'bool', 'bool']
-    ['float', 'float', 'float']
-    ['string', 'string', 'string']
+    ["int", "int", "int"]
+    ["bool", "bool", "bool"]
+    ["float", "float", "float"]
+    ["string", "string", "string"]
   ]
 for v in "EQ NE GT LT GTE LTE".split  /\s+/g
   @bin_op_ret_type_hash_list[v] = [
-    ['int', 'int', 'bool']
-    ['float', 'float', 'bool']
-    ['string', 'string', 'bool']
+    ["int", "int", "bool"]
+    ["float", "float", "bool"]
+    ["string", "string", "bool"]
   ]
 str_list = """
 ADD
@@ -433,32 +446,33 @@ class @Bin_op
     
     # extra cases
     if !found
-      if @op == 'ASSIGN'
+      if @op == "ASSIGN"
         if @a.type.cmp @b.type
           if @a.type.cmp @type
             found = true
           else
             throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. #{@op} a=b=[#{@a.type}] must have return type '#{@a.type}'"
       
-      else if @op in ['EQ', 'NE']
+      else if @op in ["EQ", "NE"]
         if @a.type.cmp @b.type
-          if @type.main == 'bool'
+          if @type.main == "bool"
             found = true
           else
             throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. #{@op} a=b=[#{@a.type}] must have return type bool"
-      else if @op == 'INDEX_ACCESS'
+      else if @op == "INDEX_ACCESS"
         switch @a.type.main
-          when 'string'
-            if @b.type.main == 'int'
+          when "string"
+            if @b.type.main == "int"
               found = true
             else
               throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be int"
-            if @type.main == 'string'
+            if @type.main == "string"
               found = true
             else
               throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be string"
-          when 'array'
-            if @b.type.main == 'int'
+          
+          when "array"
+            if @b.type.main == "int"
               found = true
             else
               throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be int"
@@ -466,8 +480,9 @@ class @Bin_op
               found = true
             else
               throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be #{@a.type.nest_list[0]} but #{@type} found"
-          when 'hash'
-            if @b.type.main == 'string'
+          
+          when "hash"
+            if @b.type.main == "string"
               found = true
             else
               throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be string"
@@ -475,8 +490,9 @@ class @Bin_op
               found = true
             else
               throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be #{@a.type.nest_list[0]} but #{@type} found"
-          when 'hash_int'
-            if @b.type.main == 'int'
+          
+          when "hash_int"
+            if @b.type.main == "int"
               found = true
             else
               throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be int"
@@ -484,6 +500,7 @@ class @Bin_op
               found = true
             else
               throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. bin_op=#{@op} #{@a.type} #{@b.type} ret type must be #{@a.type.nest_list[0]} but #{@type} found"
+          
           else
             throw new Error "Bin_op validation error line=#{@line} pos=#{@pos}. Can't apply bin_op=#{@op} to #{@a.type} #{@b.type}"
     
@@ -507,29 +524,29 @@ class @Bin_op
 
 @un_op_ret_type_hash_list =
   INC_RET : [
-    ['int', 'int']
+    ["int", "int"]
   ]
   RET_INC : [
-    ['int', 'int']
+    ["int", "int"]
   ]
   DEC_RET : [
-    ['int', 'int']
+    ["int", "int"]
   ]
   RET_DEC : [
-    ['int', 'int']
+    ["int", "int"]
   ]
   BOOL_NOT : [
-    ['bool', 'bool']
+    ["bool", "bool"]
   ]
   BIT_NOT : [
-    ['int', 'int']
+    ["int", "int"]
   ]
   MINUS : [
-    ['int', 'int']
-    ['float', 'float']
+    ["int", "int"]
+    ["float", "float"]
   ]
   PLUS : [
-    ['string', 'float']
+    ["string", "float"]
   ]
 class @Un_op
   a   : null
@@ -554,8 +571,8 @@ class @Un_op
         if v[1] != @type.toString()
           throw new Error "Un_op validation error line=#{@line} pos=#{@pos}. un_op=#{@op} with type #{@a.type} should produce type #{v[1]} but #{@type} found"
         break
-    if @op == 'IS_NOT_NULL'
-      if @type.main != 'bool'
+    if @op == "IS_NOT_NULL"
+      if @type.main != "bool"
         throw new Error "Un_op validation error line=#{@line} pos=#{@pos}. un_op=#{@op} with type #{@a.type} should produce type bool but #{@type} found"
       found = true
     if !found
@@ -565,7 +582,7 @@ class @Un_op
 
 class @Field_access
   t : null
-  name : ''
+  name : ""
   type  : null
   
   validate : (ctx = new module.Validation_context)->
@@ -578,12 +595,12 @@ class @Field_access
     
     type_validate @type, ctx
     
-    if @name == 'new'
-      if @t.type.main in ['bool', 'int', 'float', 'string']
+    if @name == "new"
+      if @t.type.main in ["bool", "int", "float", "string"]
         throw new Error "Field_access validation error line=#{@line} pos=#{@pos}. Access to missing field '#{@name}' in '#{@t.type}'."
-      nest_type = new Type 'function'
+      nest_type = new Type "function"
       nest_type.nest_list[0] = @t.type
-    else if @t.type.main == 'struct'
+    else if @t.type.main == "struct"
       if !nest_type = @t.type.field_hash[@name]
         throw new Error "Field_access validation error line=#{@line} pos=#{@pos}. Access to missing field '#{@name}' in '#{@t.type}'. Possible keys [#{Object.keys(@t.type.field_hash).join ', '}]"
     else
@@ -612,7 +629,7 @@ class @Fn_call
     if !@fn
       throw new Error "Fn_call validation error line=#{@line} pos=#{@pos}. fn missing"
     @fn.validate(ctx)
-    if @fn.type.main != 'function'
+    if @fn.type.main != "function"
       throw new Error "Fn_call validation error line=#{@line} pos=#{@pos}. Can't call type '@fn.type'. You can call only function"
     
     if !@type.cmp void_type
@@ -672,7 +689,7 @@ class @If
     
     @cond.validate(ctx)
     
-    unless @cond.type.main in ['bool', 'int']
+    unless @cond.type.main in ["bool", "int"]
       throw new Error "If validation error line=#{@line} pos=#{@pos}. cond must be bool or int but found '#{@cond.type}'"
     
     @t.validate(ctx)
@@ -709,16 +726,19 @@ class @Switch
     if 0 == h_count @hash
       throw new Error "Switch validation error line=#{@line} pos=#{@pos}. no when conditions found"
     switch @cond.type.main
-      when 'int'
+      when "int"
         for k,v of @hash
           if parseInt(k).toString() != k or !isFinite k
             throw new Error "Switch validation error line=#{@line} pos=#{@pos}. key '#{k}' can't be int"
-      # when 'float' # не разрешаем switch по  float т.к. нельзя сравнивать float'ы через ==
+      
+      # when "float" # не разрешаем switch по  float т.к. нельзя сравнивать float'ы через ==
         # for k,v of @hash
           # if !isFinite k
             # throw new Error "Switch validation error line=#{@line} pos=#{@pos}. key '#{k}' can't be float"
-      when 'string'
-        'nothing'
+      
+      when "string"
+        "nothing"
+      
       else
         throw new Error "Switch validation error line=#{@line} pos=#{@pos}. Can't implement switch for condition type '#{@cond.type}'"
     
@@ -744,14 +764,17 @@ class @Loop
     found = false
     walk = (t)->
       switch t.constructor.name
-        when 'Scope'
+        when "Scope"
           for v in t.list
             walk v
-        when 'If'
+        
+        when "If"
           walk t.t
           walk t.f
-        when 'Break', 'Ret'
+        
+        when "Break", "Ret"
           found = true
+      
       return
     
     walk @scope
@@ -797,7 +820,7 @@ class @While
       throw new Error "While validation error line=#{@line} pos=#{@pos}. cond missing"
     
     @cond.validate(ctx)
-    unless @cond.type.main in ['bool', 'int']
+    unless @cond.type.main in ["bool", "int"]
       throw new Error "While validation error line=#{@line} pos=#{@pos}. cond must be bool or int"
     
     ctx_nest = ctx.mk_nest()
@@ -833,24 +856,24 @@ class @For_range
     @b.validate ctx
     @step?.validate ctx
     
-    unless @i.type.main in ['int', 'float']
+    unless @i.type.main in ["int", "float"]
       throw new Error "For_range validation error line=#{@line} pos=#{@pos}. Iterator should be type int or float but '#{@i.type}' found"
-    unless @a.type.main in ['int', 'float']
+    unless @a.type.main in ["int", "float"]
       throw new Error "For_range validation error line=#{@line} pos=#{@pos}. Range a should be type int or float but '#{@a.type}' found"
-    unless @b.type.main in ['int', 'float']
+    unless @b.type.main in ["int", "float"]
       throw new Error "For_range validation error line=#{@line} pos=#{@pos}. Range b should be type int or float but '#{@b.type}' found"
     if @step
-      unless @step.type.main in ['int', 'float']
+      unless @step.type.main in ["int", "float"]
         throw new Error "For_range validation error line=#{@line} pos=#{@pos}. Step should be type int or float but '#{@step.type}' found"
     
-    if @i.type.main == 'int'
-      unless @a.type.main == 'int'
+    if @i.type.main == "int"
+      unless @a.type.main == "int"
         throw new Error "For_range validation error line=#{@line} pos=#{@pos}. Range a should be type int because iterator is int but '#{@a.type}' found"
-      unless @b.type.main == 'int'
+      unless @b.type.main == "int"
         throw new Error "For_range validation error line=#{@line} pos=#{@pos}. Range b should be type int because iterator is int but '#{@b.type}' found"
       
       if @step
-        unless @step.type.main == 'int'
+        unless @step.type.main == "int"
           throw new Error "For_range validation error line=#{@line} pos=#{@pos}. Step should be type int because iterator is int but '#{@step.type}' found"
     
     ctx_nest = ctx.mk_nest()
@@ -879,14 +902,16 @@ class @For_col
     @v?.validate ctx
     
     switch @t.type.main
-      when 'array', 'hash_int'
+      when "array", "hash_int"
         if @k
-          unless @k.type.main == 'int'
+          unless @k.type.main == "int"
             throw new Error "For_col validation error line=#{@line} pos=#{@pos}. Key must be int for array<t> target but found '#{@k.type}'"
-      when 'hash'
+      
+      when "hash"
         if @k
-          unless @k.type.main == 'string'
+          unless @k.type.main == "string"
             throw new Error "For_col validation error line=#{@line} pos=#{@pos}. Key must be string for hash<t> target but found '#{@k.type}'"
+      
       else
         throw new Error "For_col validation error line=#{@line} pos=#{@pos}. For_col accepts types array<t>, hash<t> and hash_int<t> but found '#{@t.type}'"
       
@@ -911,7 +936,7 @@ class @Ret
       if !@t.type.cmp return_type
         throw new Error "Ret validation error line=#{@line} pos=#{@pos}. Ret type must be '#{return_type}' but found '#{@t.type}'"
     else
-      if return_type.main != 'void'
+      if return_type.main != "void"
         throw new Error "Ret validation error line=#{@line} pos=#{@pos}. Ret type must be '#{return_type}' but found void (no return value)"
     
     
@@ -922,7 +947,7 @@ class @Ret
 class @Try
   t : null
   c : null
-  exception_var_name : ''
+  exception_var_name : ""
   line  : 0
   pos   : 0
   constructor : ()->
@@ -935,7 +960,7 @@ class @Throw
 #    decl
 # ###################################################################################################
 class @Var_decl
-  name  : ''
+  name  : ""
   type  : null
   size  : null
   assign_value      : null
@@ -955,7 +980,7 @@ class @Var_decl
     return
 
 class @Class_decl
-  name  : ''
+  name  : ""
   scope : null
   _prepared_field2type : {}
   line  : 0
@@ -976,22 +1001,22 @@ class @Class_decl
     
     @_prepared_field2type = {} # ensure reset (some generators rewrite this field)
     for v in @scope.list
-      unless v.constructor.name in ['Var_decl', 'Fn_decl']
+      unless v.constructor.name in ["Var_decl", "Fn_decl"]
         throw new Error "Class_decl validation error line=#{@line} pos=#{@pos}. Only Var_decl and Fn_decl allowed at Class_decl, but '#{v.constructor.name}' found"
       @_prepared_field2type[v.name] = v.type
     
     ctx_nest = ctx.mk_nest()
     # wrapper
     var_decl = new module.Var_decl
-    var_decl.name = 'this'
+    var_decl.name = "this"
     var_decl.type = new Type @name
-    ctx_nest.var_hash['this'] = var_decl
+    ctx_nest.var_hash["this"] = var_decl
     @scope.validate(ctx_nest)
     return
 
 class @Fn_decl
   is_closure : false
-  name : ''
+  name : ""
   type  : null
   arg_name_list  : []
   scope : null
@@ -1006,7 +1031,7 @@ class @Fn_decl
       throw new Error "Fn_decl validation error line=#{@line} pos=#{@pos}. Function should have name"
     
     type_validate @type, ctx
-    if @type.main != 'function'
+    if @type.main != "function"
       throw new Error "Fn_decl validation error line=#{@line} pos=#{@pos}. Type must be function but '#{@type}' found"
     if @type.nest_list.length-1 != @arg_name_list.length
       throw new Error "Fn_decl validation error line=#{@line} pos=#{@pos}. @type.nest_list.length-1 != @arg_name_list #{@type.nest_list.length-1} != #{@arg_name_list.length}"
