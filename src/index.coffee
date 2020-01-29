@@ -729,7 +729,8 @@ class @Fn_call
   clone : ()->
     ret = new module.Fn_call
     ret.fn    = @fn.clone()
-    ret.arg_list  = @arg_list.clone()
+    for v in @arg_list
+      ret.arg_list.push v.clone()
     ret.splat_fin = @splat_fin
     ret.type  = @type.clone() if @type
     ret.line  = @line
